@@ -22,6 +22,86 @@ np.random.seed(0)
 
 
 
+def compute_peptide_mass(peptide):
+  """TODO(nh2tran): docstring.
+  """
+
+  #~ print("".join(["="] * 80)) # section-separating line ===
+  #~ print("WorkerDB: _compute_peptide_mass()")
+
+  peptide_mass = (deepnovo_config.mass_N_terminus
+                  + sum(deepnovo_config.mass_AA[aa] for aa in peptide)
+                  + deepnovo_config.mass_C_terminus)
+
+  return peptide_mass
+
+# ~ peptide = 'AAAAAAALQAK'
+# ~ print(peptide)
+# ~ print(compute_peptide_mass(peptide))
+
+
+def check_mass_shift(input_feature_file):
+  print("check_mass_shift()")
+
+  print("input_feature_file = ", os.path.join(input_feature_file))
+
+  with open(input_feature_file, mode="r") as input_handle:
+    # header line
+    line = input_handle.readline()
+    # first feature
+    line = input_handle.readline()
+    precursor_ppm_list = []
+    # ~ test_handle = open("test.txt", mode="w")
+    while line:
+      line_split = re.split(',|\r|\n', line)
+
+      # parse raw peptide sequence
+      raw_sequence = line_split[deepnovo_config.col_raw_sequence]
+      raw_sequence_len = len(raw_sequence)
+      peptide = []
+      index = 0
+      while index < raw_sequence_len:
+        if raw_sequence[index] == "(":
+          if peptide[-1] == "C" and raw_sequence[index:index + 8] == "(+57.02)":
+            peptide[-1] = "C(Carbamidomethylation)"
+            index += 8
+          elif peptide[-1] == 'M' and raw_sequence[index:index + 8] == "(+15.99)":
+            peptide[-1] = 'M(Oxidation)'
+            index += 8
+          elif peptide[-1] == 'N' and raw_sequence[index:index + 6] == "(+.98)":
+            peptide[-1] = 'N(Deamidation)'
+            index += 6
+          elif peptide[-1] == 'Q' and raw_sequence[index:index + 6] == "(+.98)":
+            peptide[-1] = 'Q(Deamidation)'
+            index += 6
+          else:  # unknown modification
+            print("ERROR: unknown modification!")
+            print("raw_sequence = ", raw_sequence)
+            sys.exit()
+        else:
+          peptide.append(raw_sequence[index])
+          index += 1
+
+      precursor_mz = float(line_split[deepnovo_config.col_precursor_mz])
+      precursor_charge = float(line_split[deepnovo_config.col_precursor_charge])
+      peptide_mass = compute_peptide_mass(peptide)
+      peptide_mz = (peptide_mass + precursor_charge * deepnovo_config.mass_H) / precursor_charge
+      precursor_ppm = (precursor_mz - peptide_mz) / peptide_mz * 1e6
+      # ~ print('precursor_mz = ', precursor_mz)
+      # ~ print('peptide_mz = ', peptide_mz)
+      # ~ print('precursor_ppm = ', precursor_ppm)
+      # ~ print(abc)
+      # ~ test_row = '\t'.join(['{0:.6f}'.format(x) for x in [peptide_mz, precursor_mz, precursor_ppm]])
+      # ~ print(test_row, file=test_handle, end="\n")
+      precursor_ppm_list.append(precursor_ppm)
+      line = input_handle.readline()
+    print(np.mean(precursor_ppm_list))
+    # ~ test_handle.close()
+
+# ~ input_feature_file = "identified_features_corrected.csv"
+# ~ check_mass_shift(input_feature_file)
+
+
 def partition_feature_file_nodup(input_feature_file, prob):
   print("partition_feature_file_nodup()")
 

@@ -161,10 +161,10 @@ class WorkerIO(object):
         if "BEGIN IONS" in line:
           spectrum_location = current_location
         elif "SCANS=" in line:
-          scan = re.split('=|\r\n', line)[1]
+          scan = re.split('=|\r|\n', line)[1]
           spectrum_location_dict[scan] = spectrum_location
         elif "RTINSECONDS=" in line:
-          rtinseconds = float(re.split('=|\r\n', line)[1])
+          rtinseconds = float(re.split('=|\r|\n', line)[1])
           spectrum_rtinseconds_dict[scan] = rtinseconds
       self.spectrum_location_dict = spectrum_location_dict
       self.spectrum_rtinseconds_dict = spectrum_rtinseconds_dict

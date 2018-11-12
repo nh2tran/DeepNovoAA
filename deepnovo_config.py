@@ -229,7 +229,8 @@ PRECURSOR_MASS_PRECISION_TOLERANCE = 0.01
 AA_MATCH_PRECISION = 0.1
 
 # skip (x > MZ_MAX,MAX_LEN)
-MAX_LEN = 50 if FLAGS.decode else 30
+# MAX_LEN = 50 if FLAGS.decode else 30
+MAX_LEN = 18
 print("MAX_LEN ", MAX_LEN)
 
 # We use a number of buckets and pad to the closest one for efficiency.

@@ -35,9 +35,9 @@ def compute_peptide_mass(peptide):
 
   return peptide_mass
 
-#~ peptide = 'AAAAAAALQAK'
-#~ print(peptide)
-#~ print(compute_peptide_mass(peptide))
+# ~ peptide = 'AAAAAAALQAK'
+# ~ print(peptide)
+# ~ print(compute_peptide_mass(peptide))
 
 
 def read_feature_accuracy(input_file, split_char):

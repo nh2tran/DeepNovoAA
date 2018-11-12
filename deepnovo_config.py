@@ -115,13 +115,13 @@ EOS_ID = 2
 vocab_reverse = ['A',
                  'R',
                  'N',
-                 'N(Deamidation)',
+                 #'N(Deamidation)',
                  'D',
                  'C',
-                 # ~ 'C(Carbamidomethylation)',
+                 #'C(Carbamidomethylation)',
                  'E',
                  'Q',
-                 'Q(Deamidation)',
+                 #'Q(Deamidation)',
                  'G',
                  'H',
                  'I',
@@ -166,14 +166,14 @@ mass_AA = {'_PAD': 0.0,
            'A': 71.03711, # 0
            'R': 156.10111, # 1
            'N': 114.04293, # 2
-           'N(Deamidation)': 115.02695,
+           #'N(Deamidation)': 115.02695,
            'D': 115.02694, # 3
            'C': 103.00919, # 4
-           # ~ 'C(Carbamidomethylation)': 160.03065, # C(+57.02)
            # ~ 'C(Carbamidomethylation)': 161.01919, # C(+58.01) # orbi
+           #'C(Carbamidomethylation)': 160.03065, # C(+57.02)
            'E': 129.04259, # 5
            'Q': 128.05858, # 6
-           'Q(Deamidation)': 129.0426,
+           #'Q(Deamidation)': 129.0426,
            'G': 57.02146, # 7
            'H': 137.05891, # 8
            'I': 113.08406, # 9

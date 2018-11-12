@@ -319,9 +319,17 @@ input_spectrum_file_valid = "data.training/dia.pecan.hela.2018_03_29/training.sp
 input_feature_file_valid = "data.training/dia.pecan.hela.2018_03_29/training_5mz_4to7.feature.csv.valid.nodup"
 input_spectrum_file_test = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
 input_feature_file_test = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
+input_spectrum_file_train = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
+input_feature_file_train = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.train.nodup"
+input_spectrum_file_valid = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
+input_feature_file_valid = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
+input_spectrum_file_test = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
+input_feature_file_test = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
 # denovo files
 denovo_input_spectrum_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
 denovo_input_feature_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
+denovo_input_spectrum_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
+denovo_input_feature_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 # db files
 # ~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"

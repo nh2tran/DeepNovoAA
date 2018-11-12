@@ -117,8 +117,8 @@ vocab_reverse = ['A',
                  'N',
                  'N(Deamidation)',
                  'D',
-                 #~ 'C',
-                 'C(Carbamidomethylation)',
+                 'C',
+                 # ~ 'C(Carbamidomethylation)',
                  'E',
                  'Q',
                  'Q(Deamidation)',
@@ -168,9 +168,9 @@ mass_AA = {'_PAD': 0.0,
            'N': 114.04293, # 2
            'N(Deamidation)': 115.02695,
            'D': 115.02694, # 3
-           #~ 'C(Carbamidomethylation)': 103.00919, # 4
-           'C(Carbamidomethylation)': 160.03065, # C(+57.02)
-           #~ 'C(Carbamidomethylation)': 161.01919, # C(+58.01) # orbi
+           'C': 103.00919, # 4
+           # ~ 'C(Carbamidomethylation)': 160.03065, # C(+57.02)
+           # ~ 'C(Carbamidomethylation)': 161.01919, # C(+58.01) # orbi
            'E': 129.04259, # 5
            'Q': 128.05858, # 6
            'Q(Deamidation)': 129.0426,
@@ -202,11 +202,11 @@ mass_AA_min = mass_AA["G"] # 57.02146
 
 
 # if change, need to re-compile cython_speedup << NO NEED
-#~ SPECTRUM_RESOLUTION = 10 # bins for 1.0 Da = precision 0.1 Da
-#~ SPECTRUM_RESOLUTION = 20 # bins for 1.0 Da = precision 0.05 Da
-#~ SPECTRUM_RESOLUTION = 40 # bins for 1.0 Da = precision 0.025 Da
+# ~ SPECTRUM_RESOLUTION = 10 # bins for 1.0 Da = precision 0.1 Da
+# ~ SPECTRUM_RESOLUTION = 20 # bins for 1.0 Da = precision 0.05 Da
+# ~ SPECTRUM_RESOLUTION = 40 # bins for 1.0 Da = precision 0.025 Da
 SPECTRUM_RESOLUTION = 50 # bins for 1.0 Da = precision 0.02 Da
-#~ SPECTRUM_RESOLUTION = 100 # bins for 1.0 Da = precision 0.01 Da
+# ~ SPECTRUM_RESOLUTION = 100 # bins for 1.0 Da = precision 0.01 Da
 print("SPECTRUM_RESOLUTION ", SPECTRUM_RESOLUTION)
 
 # if change, need to re-compile cython_speedup << NO NEED
@@ -224,8 +224,8 @@ num_position = 0
 PRECURSOR_MASS_PRECISION_TOLERANCE = 0.01
 
 # ONLY for accuracy evaluation
-#~ PRECURSOR_MASS_PRECISION_INPUT_FILTER = 0.01
-#~ PRECURSOR_MASS_PRECISION_INPUT_FILTER = 1000
+# ~ PRECURSOR_MASS_PRECISION_INPUT_FILTER = 0.01
+# ~ PRECURSOR_MASS_PRECISION_INPUT_FILTER = 1000
 AA_MATCH_PRECISION = 0.1
 
 # skip (x > MZ_MAX,MAX_LEN)
@@ -248,10 +248,10 @@ print("num_ion ", num_ion)
 l2_weight = 0.0
 print("l2_weight ", l2_weight)
 
-#~ encoding_cnn_size = 4 * (RESOLUTION//10) # 4 # proportion to RESOLUTION
-#~ encoding_cnn_filter = 4
-#~ print("encoding_cnn_size ", encoding_cnn_size)
-#~ print("encoding_cnn_filter ", encoding_cnn_filter)
+# ~ encoding_cnn_size = 4 * (RESOLUTION//10) # 4 # proportion to RESOLUTION
+# ~ encoding_cnn_filter = 4
+# ~ print("encoding_cnn_size ", encoding_cnn_size)
+# ~ print("encoding_cnn_filter ", encoding_cnn_filter)
 
 embedding_size = 512
 print("embedding_size ", embedding_size)
@@ -307,44 +307,44 @@ knapsack_file = "knapsack.npy"
 topk_output = 1
 # training/testing/decoding files
 # DDA
-#~ input_file_train = "data.training/yeast.high.exclude_weisser_2017/train.exclude_1.mgf"
-#~ input_file_valid = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
-#~ input_file_test = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
-#~ decode_test_file = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
+# ~ input_file_train = "data.training/yeast.high.exclude_weisser_2017/train.exclude_1.mgf"
+# ~ input_file_valid = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
+# ~ input_file_test = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
+# ~ decode_test_file = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
 # DIA
 input_spectrum_file_train = "data.training/dia.pecan.hela.2018_03_29/training.spectrum.mgf"
 input_feature_file_train = "data.training/dia.pecan.hela.2018_03_29/training_5mz_4to7.feature.csv.train.nodup"
 input_spectrum_file_valid = "data.training/dia.pecan.hela.2018_03_29/training.spectrum.mgf"
 input_feature_file_valid = "data.training/dia.pecan.hela.2018_03_29/training_5mz_4to7.feature.csv.valid.nodup"
-input_spectrum_file_test = "data.training/dia.hla.elife.jurkat_oxford/testing_jurkat_oxford.spectrum.mgf"
-input_feature_file_test = "data.training/dia.hla.elife.jurkat_oxford/testing_jurkat_oxford.feature.csv"
+input_spectrum_file_test = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
+input_feature_file_test = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
 # denovo files
-denovo_input_spectrum_file = "data.training/dia.pecan.plasma.2018_03_29/1.mgf"
-denovo_input_feature_file = "data.training/dia.pecan.plasma.2018_03_29/1.csv"
+denovo_input_spectrum_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
+denovo_input_feature_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 # db files
-#~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
-#~ db_input_spectrum_file = "data.training/dia.pecan.hela.2018_03_29/testing.spectrum.mgf"
-#~ db_input_feature_file = "data.training/dia.abrf.2018_03_27/testing.feature.csv.2k"
-#~ db_output_file = db_input_feature_file + ".deepnovo_db"
-#~ if FLAGS.decoy:
-  #~ db_output_file += ".decoy"
+# ~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
+# ~ db_input_spectrum_file = "data.training/dia.pecan.hela.2018_03_29/testing.spectrum.mgf"
+# ~ db_input_feature_file = "data.training/dia.abrf.2018_03_27/testing.feature.csv.2k"
+# ~ db_output_file = db_input_feature_file + ".deepnovo_db"
+# ~ if FLAGS.decoy:  
+  # ~ db_output_file += ".decoy"
 # hybrid files
-#~ hybrid_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
-#~ hybrid_input_spectrum_file = "data.training/dia.abrf.2018_03_27/prediction.spectrum.mgf"
-#~ hybrid_input_feature_file = "data.training/dia.abrf.2018_03_27/prediction.feature.csv.part1"
-#~ hybrid_denovo_file = hybrid_input_feature_file + ".deepnovo_hybrid_denovo"
-#~ hybrid_output_file = hybrid_input_feature_file + ".deepnovo_hybrid"
-#~ if FLAGS.decoy:
-  #~ hybrid_output_file += ".decoy"
+# ~ hybrid_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
+# ~ hybrid_input_spectrum_file = "data.training/dia.abrf.2018_03_27/prediction.spectrum.mgf"
+# ~ hybrid_input_feature_file = "data.training/dia.abrf.2018_03_27/prediction.feature.csv.part1"
+# ~ hybrid_denovo_file = hybrid_input_feature_file + ".deepnovo_hybrid_denovo"
+# ~ hybrid_output_file = hybrid_input_feature_file + ".deepnovo_hybrid"
+# ~ if FLAGS.decoy:
+  # ~ hybrid_output_file += ".decoy"
 # test accuracy
 predicted_format = "deepnovo"
-target_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.feature.csv"
-#~ predicted_file = denovo_output_file
-predicted_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.unlabeled.csv.deepnovo_denovo.top90"
-#~ predicted_format = "peaks"
-#~ target_file = "data.training/dia.urine.2018_04_23/testing_gs.feature.csv"
-#~ predicted_file = "data.training/dia.urine.2018_04_23/peaks.denovo.csv.uti"
+target_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
+predicted_file = denovo_output_file
+# ~ predicted_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.unlabeled.csv.deepnovo_denovo.top90"
+# ~ predicted_format = "peaks"
+# ~ target_file = "data.training/dia.urine.2018_04_23/testing_gs.feature.csv"
+# ~ predicted_file = "data.training/dia.urine.2018_04_23/peaks.denovo.csv.uti"
 accuracy_file = predicted_file + ".accuracy"
 denovo_only_file = predicted_file + ".denovo_only"
 scan2fea_file = predicted_file + ".scan2fea"

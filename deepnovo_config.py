@@ -169,7 +169,7 @@ mass_AA = {'_PAD': 0.0,
            #'N(Deamidation)': 115.02695,
            'D': 115.02694, # 3
            'C': 103.00919, # 4
-           # ~ 'C(Carbamidomethylation)': 161.01919, # C(+58.01) # orbi
+           #'C(Carbamidomethylation)': 161.01919, # C(+58.01) # orbi
            #'C(Carbamidomethylation)': 160.03065, # C(+57.02)
            'E': 129.04259, # 5
            'Q': 128.05858, # 6

@@ -49,7 +49,7 @@ def read_feature_accuracy(input_file, split_char):
       line = re.split(split_char, line)
       feature = {}
       feature["feature_id"] = line[0]
-      feature["feature_area"] = math.log10(float(line[1]))
+      feature["feature_area"] = math.log10(max(float(line[1]), 1.0))
       feature["predicted_score"] = float(line[4])
       feature["recall_AA"] = float(line[5])
       feature["predicted_len"] = float(line[6])

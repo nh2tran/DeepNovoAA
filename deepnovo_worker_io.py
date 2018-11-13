@@ -402,8 +402,8 @@ class WorkerIO(object):
     line = re.split(',|\r|\n', line)
     feature_id = line[deepnovo_config.col_feature_id]
     feature_area_str = line[deepnovo_config.col_feature_area]
-    precursor_mz = float(line[deepnovo_config.col_precursor_mz])
     feature_area = float(feature_area_str) if feature_area_str else 1.0
+    precursor_mz = float(line[deepnovo_config.col_precursor_mz])
     precursor_charge = float(line[deepnovo_config.col_precursor_charge])
     rt_mean = float(line[deepnovo_config.col_rt_mean])
     raw_sequence = line[deepnovo_config.col_raw_sequence]

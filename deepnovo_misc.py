@@ -107,14 +107,14 @@ def select_top_score(input_file, output_file, split_char, col_score, score_cutof
   print('total_feature = ', total_feature)
   print('select_feature = ', select_feature)
           
-#~ accuracy_cutoff = 0.90
-#~ input_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.unlabeled.csv.deepnovo_denovo"
-#~ accuracy_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.unlabeled.csv.deepnovo_denovo.accuracy"
-#~ output_file = input_file + ".top90"
-#~ split_char = '\t|\n'
-#~ col_score = deepnovo_config.pcol_score_max
-#~ score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
-#~ select_top_score(input_file, output_file, split_char, col_score, score_cutoff)
+accuracy_cutoff = 0.95
+accuracy_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.accuracy"
+score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
+input_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv.deepnovo_denovo"
+output_file = input_file + ".top95"
+split_char = '\t|\n'
+col_score = deepnovo_config.pcol_score_max
+select_top_score(input_file, output_file, split_char, col_score, score_cutoff)
 
 
 def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence):
@@ -161,12 +161,12 @@ def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char
   print('db_count = ', db_count)
   print('denovo_count = ', denovo_count)
 
-#~ input_fasta_file = "data/uniprot_sprot.human.fasta"
-#~ input_denovo_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.unlabeled.csv.deepnovo_denovo.top90.denovo_only"
-#~ output_file = input_denovo_file + ".lookup"
-#~ split_char = '\t|\n'
-#~ col_sequence = 2
-#~ database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence)
+input_fasta_file = "data/uniprot_sprot.human.fasta"
+input_denovo_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv.deepnovo_denovo.top95"
+output_file = input_denovo_file + ".lookup"
+split_char = '\t|\n'
+col_sequence = 2
+database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence)
 
 
 def select_top_k(input_file, output_file, top_k, split_char, col_score):

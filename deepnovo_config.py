@@ -329,7 +329,7 @@ input_feature_file_test = "data.training/bassani.hla.2018_10_18.correct_mass_shi
 # ~ denovo_input_spectrum_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
 # ~ denovo_input_feature_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
 denovo_input_spectrum_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
-denovo_input_feature_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv"
+denovo_input_feature_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 # db files
 # ~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
@@ -348,9 +348,9 @@ denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
   # ~ hybrid_output_file += ".decoy"
 # test accuracy
 predicted_format = "deepnovo"
-target_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
-predicted_file = denovo_output_file
-# ~ predicted_file = "data.training/dia.pecan.plasma.2018_03_29/testing_plasma.unlabeled.csv.deepnovo_denovo.top90"
+target_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
+# ~ predicted_file = denovo_output_file
+predicted_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.top95"
 # ~ predicted_format = "peaks"
 # ~ target_file = "data.training/dia.urine.2018_04_23/testing_gs.feature.csv"
 # ~ predicted_file = "data.training/dia.urine.2018_04_23/peaks.denovo.csv.uti"

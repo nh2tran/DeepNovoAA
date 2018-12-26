@@ -11,6 +11,9 @@ import re
 
 import numpy as np
 
+from Bio import SeqIO
+from Bio.SeqIO import FastaIO
+
 #~ from tensorflow.models.rnn.translate import data_utils
 import deepnovo_config
 
@@ -20,6 +23,22 @@ np.random.seed(0)
 
 
 
+
+
+
+# Write fasta file in single-line format
+def write_fasta_1line(input_fasta_file, output_fasta_file):
+  with open(input_fasta_file, "r")  as handle:
+    record_list = list(SeqIO.parse(handle, "fasta"))
+    print(input_fasta_file)
+    print("Number of protein sequences: ", len(record_list))
+  with open(output_fasta_file, "w") as handle:
+    fasta_writer = FastaIO.FastaWriter(handle, wrap=None)
+    fasta_writer.write_file(record_list)
+
+# ~ input_fasta_file = "data/uniprot.human_all_isoforms.fasta"
+# ~ output_fasta_file = input_fasta_file + ".1line"
+# ~ write_fasta_1line(input_fasta_file, output_fasta_file)
 
 
 def compute_peptide_mass(peptide):

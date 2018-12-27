@@ -9,6 +9,7 @@ import sys
 import time
 import re
 
+import csv
 import numpy as np
 random.seed(0)
 np.random.seed(0)
@@ -256,65 +257,60 @@ def partition_feature_file_nodup(input_feature_file, prob):
 def cat_file_mgf(input_file_list, fraction_list, output_file):
   print("cat_file_mgf()")
   
+  # iterate over mgf files and their lines
   counter = 0
   with open(output_file, mode="w") as output_handle:
-    for index, input_file in enumerate(input_file_list):
+    for input_file, fraction in zip(input_file_list, fraction_list):
       print("input_file = ", os.path.join(input_file))
       with open(input_file, mode="r") as input_handle:
-          line = input_handle.readline()
-          while line:
-            if "SCANS=" in line: # a spectrum found
-              counter += 1
-              scan = re.split('=|\n', line)[1]
-              # re-number scan id
-              output_handle.write("SCANS=F{0}:{1}\n".format(fraction_list[index], scan))
-            else:
-                output_handle.write(line)
-            line = input_handle.readline()
-
+        for line in input_handle.readlines():
+          if "SCANS=" in line: # a spectrum found
+            counter += 1
+            scan = re.split('=|\n|\r', line)[1]
+            # re-number scan id
+            output_handle.write("SCANS=F{0}:{1}\n".format(fraction, scan))
+          else:
+            output_handle.write(line)
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
 
-# merge multiple feature files into one, adding fraction ID to scan ID
+# merge multiple feature files into one, adding fraction ID to feature & scan ID
 def cat_file_feature(input_file_list, fraction_list, output_file):
   print("cat_file_feature()")
   
+  # read and write header line
+  csv_reader = csv.DictReader(open(input_file_list[0]))
+  csv_writer = csv.DictWriter(open(output_file, mode='w'), csv_reader.fieldnames)
+  csv_writer.writeheader()
+  # iterate over feature files and their rows
   counter = 0
-  with open(output_file, mode="w") as output_handle:
-    for index, input_file in enumerate(input_file_list):
-      print("input_file = ", os.path.join(input_file))
-      with open(input_file, mode="r") as input_handle:
-          header_line = input_handle.readline()
-          if index == 0 :
-            output_handle.write(header_line)
-          line = input_handle.readline()
-          while line:
-            counter += 1
-            line = re.split(',|\r|\n', line)[:deepnovo_config.col_num]
-            # add fraction to feature id
-            feature_id = line[deepnovo_config.col_feature_id]
-            feature_id = "F" + str(fraction_list[index]) + ":" + feature_id
-            line[deepnovo_config.col_feature_id] = feature_id
-            # add fraction to scan id
-            scan_list = re.split(';', line[deepnovo_config.col_scan_list])
-            scan_list = ["F" + str(fraction_list[index]) + ":" + x for x in scan_list]
-            line[deepnovo_config.col_scan_list] = ";".join(scan_list)
-            # join the line back together and write to output
-            output_handle.write(",".join(line) + "\n")
-            line = input_handle.readline()
-
+  for input_file, fraction in zip(input_file_list, fraction_list):
+    print("input_file = ", os.path.join(input_file))
+    csv_reader = csv.DictReader(open(input_file))
+    for row in csv_reader:
+      counter += 1
+      # add fraction to feature id
+      feature_id = row['spec_group_id']
+      feature_id = "F" + str(fraction) + ":" + feature_id
+      row['spec_group_id'] = feature_id
+      # add fraction to scan id
+      scan_list = re.split(';', row['scans'])
+      scan_list = ["F" + str(fraction) + ":" + x for x in scan_list]
+      row['scans'] = ";".join(scan_list)
+      # join the line back together and write to output
+      csv_writer.writerow(row)
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-#~ folder_path = "data.training/dia.pecan.hela.2018_03_29/"
-#~ fraction_list = range(4, 7+1)
-#~ cat_file_mgf(input_file_list=[folder_path + str(i) + "_frac.spectrum.mgf"
-                              #~ for i in fraction_list],
-             #~ fraction_list=fraction_list,
-             #~ output_file=folder_path + "testing_jurkat_oxford.spectrum.mgf")
-#~ cat_file_feature(input_file_list=[folder_path + str(i) + "_frac.feature.csv"
-                                  #~ for i in fraction_list],
-                 #~ fraction_list=fraction_list,
-                 #~ output_file=folder_path + "training_5mz_4to7.feature.csv")
+folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15/"
+fraction_list = range(0, 15+1)
+cat_file_mgf(
+    input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
+    fraction_list=fraction_list,
+    output_file=folder_path + "spectrum.mgf")
+cat_file_feature(
+    input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
+    fraction_list=fraction_list,
+    output_file=folder_path + "feature.csv")
 

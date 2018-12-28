@@ -121,140 +121,182 @@ def check_mass_shift(input_feature_file):
 # ~ check_mass_shift(input_feature_file)
 
 
-# randomly partition a feature file into train/valid/test files
-def partition_feature_file(input_feature_file, prob):
-  print("partition_feature_file()")
+# randomly split a feature file into train/valid/test files for training
+def split_feature_training(input_feature_file, proportion):
+  print("split_feature_training()")
 
-  print("input_feature_file = ", os.path.join(input_feature_file))
-  print("prob = ", prob)
+  print("input_feature_file = ", input_feature_file)
+  print("proportion = ", proportion)
 
   output_file_train = input_feature_file + ".train"
   output_file_valid = input_feature_file + ".valid"
   output_file_test = input_feature_file + ".test"
-
-  with open(input_feature_file, mode="r") as input_handle:
-    with open(output_file_train, mode="w") as output_handle_train:
-      with open(output_file_valid, mode="w") as output_handle_valid:
-        with open(output_file_test, mode="w") as output_handle_test:
-          counter = 0
-          counter_train = 0
-          counter_valid = 0
-          counter_test = 0
-          # header line
-          line = input_handle.readline()
-          output_handle_train.write(line)
-          output_handle_valid.write(line)
-          output_handle_test.write(line)
-          # first feature
-          line = input_handle.readline()
-          while line:
-            counter += 1
-            set_num = np.random.choice(a=3, size=1, p=prob)
-            if set_num == 0:
-              output_handle = output_handle_train
-              counter_train += 1
-            elif set_num == 1:
-              output_handle = output_handle_valid
-              counter_valid += 1
-            else:
-              output_handle = output_handle_test
-              counter_test += 1
-            output_handle.write(line)
-            line = input_handle.readline()
-
-  input_handle.close()
-  output_handle_train.close()
-  output_handle_valid.close()
-  output_handle_test.close()
-
-  print("counter = {0:d}".format(counter))
-  print("counter_train = {0:d}".format(counter_train))
-  print("counter_valid = {0:d}".format(counter_valid))
-  print("counter_test = {0:d}".format(counter_test))
+  print("output_file_train =", output_file_train)
+  print("output_file_valid =", output_file_valid)
+  print("output_file_test =", output_file_test)
 
 
-# partition a feature file into train/valid/test files with NO common peptides
-def partition_feature_file_nodup(input_feature_file, prob):
-  print("partition_feature_file_nodup()")
+  num_total = 0
+  num_train = 0
+  num_valid = 0
+  num_test = 0
 
-  print("input_feature_file = ", os.path.join(input_feature_file))
-  print("prob = ", prob)
+  # read and write header line
+  csv_reader = csv.DictReader(open(input_feature_file))
+  csv_writer_train = csv.DictWriter(open(output_file_train, mode='w'), csv_reader.fieldnames)
+  csv_writer_valid = csv.DictWriter(open(output_file_valid, mode='w'), csv_reader.fieldnames)
+  csv_writer_test = csv.DictWriter(open(output_file_test, mode='w'), csv_reader.fieldnames)
+  csv_writer_train.writeheader()
+  csv_writer_valid.writeheader()
+  csv_writer_test.writeheader()
 
-  output_file_train = input_feature_file + ".train" + ".nodup"
-  output_file_valid = input_feature_file + ".valid" + ".nodup"
-  output_file_test = input_feature_file + ".test" + ".nodup"
+  # iterate over feature rows
+  # use random numbers 0/1/2 to assign rows to writers train/valid/test
+  for row in csv_reader:
+    num_total += 1
+    random_num = np.random.choice(a=3, size=1, p=proportion)
+    if random_num == 0:
+      csv_writer = csv_writer_train
+      num_train += 1
+    elif random_num == 1:
+      csv_writer = csv_writer_valid
+      num_valid += 1
+    else:
+      csv_writer = csv_writer_test
+      num_test += 1
+    csv_writer.writerow(row)
+
+  print("num_total =", num_total)
+  print("num_train =", num_train)
+  print("num_valid =", num_valid)
+  print("num_test =", num_test)
+
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
+# ~ proportion = [0.90, 0.05, 0.05]
+# ~ split_feature_training(input_feature_file, proportion)
+
+
+# randomly split a feature file into train/valid/test files for training
+# train/valid/test do NOT SHARE PEPTIDES
+def split_feature_training_noshare(input_feature_file, proportion):
+  print("split_feature_training_noshare()")
+
+  print("input_feature_file = ", input_feature_file)
+  print("proportion = ", proportion)
+
+  output_file_train = input_feature_file + ".train" + ".noshare"
+  output_file_valid = input_feature_file + ".valid" + ".noshare"
+  output_file_test = input_feature_file + ".test" + ".noshare"
+  print("output_file_train =", output_file_train)
+  print("output_file_valid =", output_file_valid)
+  print("output_file_test =", output_file_test)
+
+  num_total = 0
+  num_unique = 0
+  num_train = 0
+  num_valid = 0
+  num_test = 0
 
   peptide_train_list = []
   peptide_valid_list = []
   peptide_test_list = []
-  
-  with open(input_feature_file, mode="r") as input_handle:
-    with open(output_file_train, mode="w") as output_handle_train:
-      with open(output_file_valid, mode="w") as output_handle_valid:
-        with open(output_file_test, mode="w") as output_handle_test:
-          counter = 0
-          counter_train = 0
-          counter_valid = 0
-          counter_test = 0
-          counter_unique = 0
-          # header line
-          line = input_handle.readline()
-          output_handle_train.write(line)
-          output_handle_valid.write(line)
-          output_handle_test.write(line)
-          # first feature
-          line = input_handle.readline()
-          while line:
-            counter += 1
-            # check if the peptide already exists in any of the three lists
-            # if yes, this new feature will be assigned to that list
-            peptide = re.split(',|\r|\n', line)[deepnovo_config.col_raw_sequence]
-            if (peptide in peptide_train_list):
-              output_handle = output_handle_train
-              counter_train += 1
-            elif (peptide in peptide_valid_list):
-              output_handle = output_handle_valid
-              counter_valid += 1
-            elif (peptide in peptide_test_list):
-              output_handle = output_handle_test
-              counter_test += 1
-            # if not, this new peptide and its spectrum will be randomly assigned
-            else:
-              counter_unique += 1
-              set_num = np.random.choice(a=3, size=1, p=prob)
-              if set_num == 0:
-                peptide_train_list.append(peptide)
-                output_handle = output_handle_train
-                counter_train += 1
-              elif set_num == 1:
-                peptide_valid_list.append(peptide)
-                output_handle = output_handle_valid
-                counter_valid += 1
-              else:
-                peptide_test_list.append(peptide)
-                output_handle = output_handle_test
-                counter_test += 1
-            output_handle.write(line)
-            line = input_handle.readline()
 
-  input_handle.close()
-  output_handle_train.close()
-  output_handle_valid.close()
-  output_handle_test.close()
+  # read and write header line
+  csv_reader = csv.DictReader(open(input_feature_file))
+  csv_writer_train = csv.DictWriter(open(output_file_train, mode='w'), csv_reader.fieldnames)
+  csv_writer_valid = csv.DictWriter(open(output_file_valid, mode='w'), csv_reader.fieldnames)
+  csv_writer_test = csv.DictWriter(open(output_file_test, mode='w'), csv_reader.fieldnames)
+  csv_writer_train.writeheader()
+  csv_writer_valid.writeheader()
+  csv_writer_test.writeheader()
 
-  print("counter = {0:d}".format(counter))
-  print("counter_train = {0:d}".format(counter_train))
-  print("counter_valid = {0:d}".format(counter_valid))
-  print("counter_test = {0:d}".format(counter_test))
-  print("counter_unique = {0:d}".format(counter_unique))
+  # iterate over feature rows
+  # if the peptide already exists, use the corresponding writer
+  # if not, use random numbers 0/1/2 to assign writers train/valid/test
+  for row in csv_reader:
+    num_total += 1
+    peptide = row['seq']
+    if (peptide in peptide_train_list):
+      csv_writer = csv_writer_train
+      num_train += 1
+    elif (peptide in peptide_valid_list):
+      csv_writer = csv_writer_valid
+      num_valid += 1
+    elif (peptide in peptide_test_list):
+      csv_writer = csv_writer_test
+      num_test += 1
+    else:
+      num_unique += 1
+      random_num = np.random.choice(a=3, size=1, p=proportion)
+      if random_num == 0:
+        peptide_train_list.append(peptide)
+        csv_writer = csv_writer_train
+        num_train += 1
+      elif random_num == 1:
+        peptide_valid_list.append(peptide)
+        csv_writer = csv_writer_valid
+        num_valid += 1
+      else:
+        peptide_test_list.append(peptide)
+        csv_writer = csv_writer_test
+        num_test += 1
+    csv_writer.writerow(row)
 
-#~ folder_path = "data.training/dia.pecan.hela.2018_03_29/"
-#~ partition_feature_file_nodup(input_feature_file=folder_path + "training_5mz_4to7.feature.csv",
-                             #~ prob=[0.90, 0.05, 0.05])
+  print("num_total =", num_total)
+  print("num_unique =", num_unique)
+  print("num_train =", num_train)
+  print("num_valid =", num_valid)
+  print("num_test =", num_test)
+
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
+# ~ proportion = [0.90, 0.05, 0.05]
+# ~ split_feature_training_noshare(input_feature_file, proportion)
+
+
+# split a feature file into labeled and unlabeled files
+def split_feature_unlabel(input_feature_file):
+  """TODO(nh2tran): docstring."""
+
+  print(''.join(['='] * 80)) # section-separating line
+  print("split_feature_unlabel()")
+  print("input_feature_file =", input_feature_file)
+
+  output_file_labeled = input_feature_file + ".labeled"
+  output_file_unlabeled = input_feature_file + ".unlabeled"
+  print("output_file_labeled =", output_file_labeled)
+  print("output_file_unlabeled =", output_file_unlabeled)
+
+  num_labeled = 0
+  num_unlabeled = 0
+
+  # read and write header line
+  csv_reader = csv.DictReader(open(input_feature_file))
+  csv_writer_labeled = csv.DictWriter(open(output_file_labeled, mode='w'), csv_reader.fieldnames)
+  csv_writer_unlabeled = csv.DictWriter(open(output_file_unlabeled, mode='w'), csv_reader.fieldnames)
+  csv_writer_labeled.writeheader()
+  csv_writer_unlabeled.writeheader()
+
+  # iterate over feature rows
+  # unlabeled features have empty peptide sequence
+  for row in csv_reader:
+    peptide = row['seq']
+    if peptide == '':
+      csv_writer = csv_writer_unlabeled
+      num_unlabeled += 1
+    else:
+      csv_writer = csv_writer_labeled
+      num_labeled += 1
+    csv_writer.writerow(row)
+
+  print("num_labeled =", num_labeled)
+  print("num_unlabeled =", num_unlabeled)
+
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv"
+# ~ split_feature_unlabel(input_feature_file)
 
 
 # merge multiple mgf files into one, adding fraction ID to scan ID
-def cat_file_mgf(input_file_list, fraction_list, output_file):
+def merge_mgf_file(input_file_list, fraction_list, output_file):
   print("cat_file_mgf()")
   
   # iterate over mgf files and their lines
@@ -276,13 +318,14 @@ def cat_file_mgf(input_file_list, fraction_list, output_file):
 
 
 # merge multiple feature files into one, adding fraction ID to feature & scan ID
-def cat_file_feature(input_file_list, fraction_list, output_file):
-  print("cat_file_feature()")
+def merge_feature_file(input_file_list, fraction_list, output_file):
+  print("merge_feature_file()")
   
   # read and write header line
   csv_reader = csv.DictReader(open(input_file_list[0]))
   csv_writer = csv.DictWriter(open(output_file, mode='w'), csv_reader.fieldnames)
   csv_writer.writeheader()
+
   # iterate over feature files and their rows
   counter = 0
   for input_file, fraction in zip(input_file_list, fraction_list):
@@ -303,14 +346,14 @@ def cat_file_feature(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15/"
-fraction_list = range(0, 15+1)
-cat_file_mgf(
-    input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
-    fraction_list=fraction_list,
-    output_file=folder_path + "spectrum.mgf")
-cat_file_feature(
-    input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
-    fraction_list=fraction_list,
-    output_file=folder_path + "feature.csv")
+# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15/"
+# ~ fraction_list = range(0, 15+1)
+# ~ merge_mgf_file(
+    # ~ input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
+    # ~ fraction_list=fraction_list,
+    # ~ output_file=folder_path + "spectrum.mgf")
+# ~ merge_feature_file(
+    # ~ input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
+    # ~ fraction_list=fraction_list,
+    # ~ output_file=folder_path + "feature.csv")
 

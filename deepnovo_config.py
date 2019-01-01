@@ -115,13 +115,13 @@ EOS_ID = 2
 vocab_reverse = ['A',
                  'R',
                  'N',
-                 #'N(Deamidation)',
+                 'N(Deamidation)',
                  'D',
                  'C',
                  #'C(Carbamidomethylation)',
                  'E',
                  'Q',
-                 #'Q(Deamidation)',
+                 'Q(Deamidation)',
                  'G',
                  'H',
                  'I',
@@ -166,14 +166,14 @@ mass_AA = {'_PAD': 0.0,
            'A': 71.03711, # 0
            'R': 156.10111, # 1
            'N': 114.04293, # 2
-           #'N(Deamidation)': 115.02695,
+           'N(Deamidation)': 115.02695,
            'D': 115.02694, # 3
            'C': 103.00919, # 4
            #'C(Carbamidomethylation)': 161.01919, # C(+58.01) # orbi
            #'C(Carbamidomethylation)': 160.03065, # C(+57.02)
            'E': 129.04259, # 5
            'Q': 128.05858, # 6
-           #'Q(Deamidation)': 129.0426,
+           'Q(Deamidation)': 129.0426,
            'G': 57.02146, # 7
            'H': 137.05891, # 8
            'I': 113.08406, # 9
@@ -323,13 +323,11 @@ input_spectrum_file_train = "data.training/bassani.hla.2018_10_18.correct_mass_s
 input_feature_file_train = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.train.nodup"
 input_spectrum_file_valid = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
 input_feature_file_valid = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
-input_spectrum_file_test = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
-input_feature_file_test = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
+input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
+input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
 # denovo files
-# ~ denovo_input_spectrum_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
-# ~ denovo_input_feature_file = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
-denovo_input_spectrum_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
-denovo_input_feature_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
+denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
+denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 # db files
 # ~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
@@ -348,9 +346,9 @@ denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
   # ~ hybrid_output_file += ".decoy"
 # test accuracy
 predicted_format = "deepnovo"
-target_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
-# ~ predicted_file = denovo_output_file
-predicted_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.top95"
+target_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
+predicted_file = denovo_output_file
+# ~ predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo"
 # ~ predicted_format = "peaks"
 # ~ target_file = "data.training/dia.urine.2018_04_23/testing_gs.feature.csv"
 # ~ predicted_file = "data.training/dia.urine.2018_04_23/peaks.denovo.csv.uti"

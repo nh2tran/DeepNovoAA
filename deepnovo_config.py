@@ -213,6 +213,7 @@ print("SPECTRUM_RESOLUTION ", SPECTRUM_RESOLUTION)
 WINDOW_SIZE = 10 # 10 bins
 print("WINDOW_SIZE ", WINDOW_SIZE)
 
+# skip peptide mass > MZ_MAX
 MZ_MAX = 3000.0
 MZ_SIZE = int(MZ_MAX * SPECTRUM_RESOLUTION) # 30k
 
@@ -228,14 +229,14 @@ PRECURSOR_MASS_PRECISION_TOLERANCE = 0.01
 # ~ PRECURSOR_MASS_PRECISION_INPUT_FILTER = 1000
 AA_MATCH_PRECISION = 0.1
 
-# skip (x > MZ_MAX,MAX_LEN)
-# MAX_LEN = 50 if FLAGS.decode else 30
-MAX_LEN = 18
-print("MAX_LEN ", MAX_LEN)
-
-# We use a number of buckets and pad to the closest one for efficiency.
-_buckets = [12,22,32,42,52] if FLAGS.decode else [12, 22, 32]
-print("_buckets ", _buckets)
+# during training or test_true_feeding: 
+# skip peptide length > MAX_LEN
+# assign peptides to buckets of the same length for efficient padding
+if FLAGS.training or FLAGS.test_true_feeding:
+  MAX_LEN = 30
+  _buckets = [12, 22, 32]
+  print("MAX_LEN ", MAX_LEN)
+  print("_buckets ", _buckets)
 
 
 # ==============================================================================
@@ -248,11 +249,6 @@ print("num_ion ", num_ion)
 
 l2_weight = 0.0
 print("l2_weight ", l2_weight)
-
-# ~ encoding_cnn_size = 4 * (RESOLUTION//10) # 4 # proportion to RESOLUTION
-# ~ encoding_cnn_filter = 4
-# ~ print("encoding_cnn_size ", encoding_cnn_size)
-# ~ print("encoding_cnn_filter ", encoding_cnn_filter)
 
 embedding_size = 512
 print("embedding_size ", embedding_size)
@@ -267,99 +263,64 @@ keep_dense = 0.5
 print("keep_conv ", keep_conv)
 print("keep_dense ", keep_dense)
 
-batch_size = 32
-print("batch_size ", batch_size)
-
-epoch_stop = 49 + 10#10 # 50 # 31800*32/(counter_train = 20568)
-print("epoch_stop ", epoch_stop)
-
-train_stack_size = 500 # 3000 # 5000
-valid_stack_size = 1500#1000 # 3000 # 5000
-test_stack_size = 5000
-decode_stack_size = 1000 # 3000
-print("train_stack_size ", train_stack_size)
-print("valid_stack_size ", valid_stack_size)
-print("test_stack_size ", test_stack_size)
-print("decode_stack_size ", decode_stack_size)
-
-steps_per_checkpoint = 10 # 100 # 2 # 4 # 200
-random_test_batches = 10
-print("steps_per_checkpoint ", steps_per_checkpoint)
-print("random_test_batches ", random_test_batches)
-
 max_gradient_norm = 5.0
 print("max_gradient_norm ", max_gradient_norm)
 
+# DIA model parameters
+neighbor_size = 5 # allow up to ? spectra, including the main spectrum
+dia_window = 20.0 # the window size of MS2 scan in Dalton
+focal_loss = True
+
+batch_size = 64
+print("batch_size ", batch_size)
+
+epoch_stop = 10
+print("epoch_stop ", epoch_stop)
+
+train_stack_size = 1000
+valid_stack_size = 5000
+test_stack_size = 5000 # for test_true_feeding
+#decode_stack_size = 1000 # for beam_search, deprecated
+print("train_stack_size ", train_stack_size)
+print("valid_stack_size ", valid_stack_size)
+print("test_stack_size ", test_stack_size)
+#print("decode_stack_size ", decode_stack_size)
+
+steps_per_checkpoint = 100
+print("steps_per_checkpoint ", steps_per_checkpoint)
+
 
 # ==============================================================================
-# DATASETS
+# INPUT/OUTPUT FILES
 # ==============================================================================
 
 
-data_format = "mgf"
-cleavage_rule = "trypsin"
-num_missed_cleavage = 2
-fixed_mod_list = ['C']
-var_mod_list = ['N', 'Q', 'M']
-num_mod = 3
-precursor_mass_tolerance = 0.01 # Da
-precursor_mass_ppm = 15.0/1000000 # ppm (20 better) # instead of absolute 0.01 Da
+# pre-built knapsack matrix
 knapsack_file = "knapsack.npy"
-topk_output = 1
+
 # training/testing/decoding files
-# DDA
-# ~ input_file_train = "data.training/yeast.high.exclude_weisser_2017/train.exclude_1.mgf"
-# ~ input_file_valid = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
-# ~ input_file_test = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
-# ~ decode_test_file = "data.training/yeast.high.exclude_weisser_2017/valid.frac_1.mgf"
-# DIA
-# ~ input_spectrum_file_train = "data.training/dia.pecan.hela.2018_03_29/training.spectrum.mgf"
-# ~ input_feature_file_train = "data.training/dia.pecan.hela.2018_03_29/training_5mz_4to7.feature.csv.train.nodup"
-# ~ input_spectrum_file_valid = "data.training/dia.pecan.hela.2018_03_29/training.spectrum.mgf"
-# ~ input_feature_file_valid = "data.training/dia.pecan.hela.2018_03_29/training_5mz_4to7.feature.csv.valid.nodup"
-# ~ input_spectrum_file_test = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.spectrum.mgf"
-# ~ input_feature_file_test = "data.training/dia.pecan.plasma.2018_03_29/testing_gs.feature.csv"
-input_spectrum_file_train = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
-input_feature_file_train = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.train.nodup"
-input_spectrum_file_valid = "data.training/bassani.hla.2018_10_18.correct_mass_shift/spectrums.mgf"
-input_feature_file_valid = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup"
+input_spectrum_file_train = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
+input_feature_file_train = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.train.noshare"
+input_spectrum_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
+input_feature_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.valid.noshare"
 input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
 input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
+
 # denovo files
 denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
 denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
-# db files
-# ~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
-# ~ db_input_spectrum_file = "data.training/dia.pecan.hela.2018_03_29/testing.spectrum.mgf"
-# ~ db_input_feature_file = "data.training/dia.abrf.2018_03_27/testing.feature.csv.2k"
-# ~ db_output_file = db_input_feature_file + ".deepnovo_db"
-# ~ if FLAGS.decoy:  
-  # ~ db_output_file += ".decoy"
-# hybrid files
-# ~ hybrid_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
-# ~ hybrid_input_spectrum_file = "data.training/dia.abrf.2018_03_27/prediction.spectrum.mgf"
-# ~ hybrid_input_feature_file = "data.training/dia.abrf.2018_03_27/prediction.feature.csv.part1"
-# ~ hybrid_denovo_file = hybrid_input_feature_file + ".deepnovo_hybrid_denovo"
-# ~ hybrid_output_file = hybrid_input_feature_file + ".deepnovo_hybrid"
-# ~ if FLAGS.decoy:
-  # ~ hybrid_output_file += ".decoy"
+
 # test accuracy
 predicted_format = "deepnovo"
 target_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
 predicted_file = denovo_output_file
 # ~ predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo"
-# ~ predicted_format = "peaks"
-# ~ target_file = "data.training/dia.urine.2018_04_23/testing_gs.feature.csv"
-# ~ predicted_file = "data.training/dia.urine.2018_04_23/peaks.denovo.csv.uti"
 accuracy_file = predicted_file + ".accuracy"
 denovo_only_file = predicted_file + ".denovo_only"
 scan2fea_file = predicted_file + ".scan2fea"
 multifea_file = predicted_file + ".multifea"
-# ==============================================================================
-neighbor_size = 5 # allow up to ? spectra, including the main spectrum
-dia_window = 20.0 # the window size of MS2 scan in Dalton
-focal_loss = True
+
 # feature file column format
 col_feature_id = 0
 col_precursor_mz = 1
@@ -382,4 +343,37 @@ pcol_protein_id = 7
 pcol_scan_list_middle = 8
 pcol_scan_list_original = 9
 pcol_score_max = 10
+
+
+# ==============================================================================
+# DB SEARCH PARAMETERS
+# ==============================================================================
+
+
+data_format = "mgf"
+cleavage_rule = "trypsin"
+num_missed_cleavage = 2
+fixed_mod_list = ['C']
+var_mod_list = ['N', 'Q', 'M']
+num_mod = 3
+precursor_mass_tolerance = 0.01 # Da
+precursor_mass_ppm = 15.0/1000000 # ppm (20 better) # instead of absolute 0.01 Da
+topk_output = 1
+
+# db files
+# ~ db_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
+# ~ db_input_spectrum_file = "data.training/dia.pecan.hela.2018_03_29/testing.spectrum.mgf"
+# ~ db_input_feature_file = "data.training/dia.abrf.2018_03_27/testing.feature.csv.2k"
+# ~ db_output_file = db_input_feature_file + ".deepnovo_db"
+# ~ if FLAGS.decoy:  
+  # ~ db_output_file += ".decoy"
+
+# hybrid files
+# ~ hybrid_fasta_file = "data/uniprot_sprot.human.db_decoy.fasta"
+# ~ hybrid_input_spectrum_file = "data.training/dia.abrf.2018_03_27/prediction.spectrum.mgf"
+# ~ hybrid_input_feature_file = "data.training/dia.abrf.2018_03_27/prediction.feature.csv.part1"
+# ~ hybrid_denovo_file = hybrid_input_feature_file + ".deepnovo_hybrid_denovo"
+# ~ hybrid_output_file = hybrid_input_feature_file + ".deepnovo_hybrid"
+# ~ if FLAGS.decoy:
+  # ~ hybrid_output_file += ".decoy"
 

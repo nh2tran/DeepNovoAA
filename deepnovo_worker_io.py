@@ -506,7 +506,10 @@ class WorkerI(object):
       # skip if precursor_mass > MZ_MAX
       precursor_mass = precursor_mz * precursor_charge - deepnovo_config.mass_H * precursor_charge
       if precursor_mass > self.MZ_MAX:
+        self.feature_count["skipped"] += 1
+        self.feature_count["skipped_mass"] += 1
         continue
+      self.feature_count["read"] += 1
 
       # parse and process spectrum
       (spectrum_holder,

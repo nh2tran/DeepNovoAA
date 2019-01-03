@@ -317,11 +317,7 @@ def read_spectra(worker_io, feature_index_list):
       counter_skipped_len += 1
   worker_io.feature_count["read"] += len(result_list)
 
-  del result_list
-  del worker_i
-  gc.collect()
-
-  counter_skipped_mass = worker_io.feature_count["skipped_mass"]
+  counter_skipped_mass = worker_i.feature_count["skipped_mass"]
   counter_skipped = counter_skipped_mass + counter_skipped_empty + counter_skipped_mod + counter_skipped_len
   print("  total peptide %d" % counter)
   print("    peptide read %d" % counter_read)
@@ -332,6 +328,10 @@ def read_spectra(worker_io, feature_index_list):
   print("    peptide skipped by len %d" % counter_skipped_len)
   # ~ print(counter_skipped_mass_precision)
   # ~ print(abc)
+
+  del result_list
+  del worker_i
+  gc.collect()
 
   return data_set, counter_read
 

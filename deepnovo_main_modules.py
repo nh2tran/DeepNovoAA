@@ -1131,6 +1131,8 @@ def create_model(session, training_mode):
   if ckpt and tf.gfile.Exists(ckpt.model_checkpoint_path + ".index"):
     print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
     model.saver.restore(session, ckpt.model_checkpoint_path)
+    if deepnovo_config.FLAGS.reset_step:
+      session.run(model.global_step.assign(0))
   else:
     print("Created model with fresh parameters.")
     # ~ train_writer = tf.train.SummaryWriter("train_log", session.graph)

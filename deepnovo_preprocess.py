@@ -39,111 +39,6 @@ def write_fasta_1line(input_fasta_file, output_fasta_file):
 # ~ write_fasta_1line(input_fasta_file, output_fasta_file)
 
 
-# calculate peptide mass = N-terminus + amino acids + C-terminus
-def compute_peptide_mass(peptide):
-  """TODO(nh2tran): docstring.
-  """
-
-  peptide_mass = (deepnovo_config.mass_N_terminus
-                  + sum(deepnovo_config.mass_AA[aa] for aa in peptide)
-                  + deepnovo_config.mass_C_terminus)
-
-  return peptide_mass
-
-# ~ peptide = 'AAAAAAALQAK'
-# ~ print(compute_peptide_mass(peptide))
-
-
-# parse peptide sequence with modifications
-# C(+57.02) >> C(Carbamidomethylation)
-# M(+15.99) >> M(Oxidation)
-# NQ(+.98) >> NQ(Deamidation)
-def parse_sequence_with_mod(raw_sequence):
-  #print("parse_sequence_with_mod()")
-
-  raw_sequence_len = len(raw_sequence)
-  index = 0
-  peptide = []
-  while index < raw_sequence_len:
-    if raw_sequence[index] == "(":
-      if peptide[-1] == "C" and raw_sequence[index:index + 8] == "(+57.02)":
-        peptide[-1] = "C(Carbamidomethylation)"
-        index += 8
-      elif peptide[-1] == 'M' and raw_sequence[index:index + 8] == "(+15.99)":
-        peptide[-1] = 'M(Oxidation)'
-        index += 8
-      elif peptide[-1] == 'N' and raw_sequence[index:index + 6] == "(+.98)":
-        peptide[-1] = 'N(Deamidation)'
-        index += 6
-      elif peptide[-1] == 'Q' and raw_sequence[index:index + 6] == "(+.98)":
-        peptide[-1] = 'Q(Deamidation)'
-        index += 6
-      else:  # unknown modification
-        print("ERROR: unknown modification!")
-        print("raw_sequence = ", raw_sequence)
-        sys.exit()
-    else:
-      peptide.append(raw_sequence[index])
-      index += 1
-
-  return peptide
-
-# ~ raw_sequence = 'RHM(+15.99)GIGKR'
-# ~ print(parse_sequence_with_mod(raw_sequence))
-
-
-# calculate ppm of precursor_mz against peptide_mz
-# ppm / 1e6 = (precursor_mz - peptide_mz) / peptide_mz 
-def calculate_mass_shift_ppm(input_feature_file):
-  #print("calculate_mass_shift_ppm()")
-
-  #print("input_feature_file = ", input_feature_file)
-
-  precursor_ppm_list = []
-  csv_reader = csv.DictReader(open(input_feature_file))
-  for row in csv_reader:
-    peptide = parse_sequence_with_mod(row['seq'])
-    precursor_mz = float(row['m/z'])
-    precursor_charge = float(row['z'])
-    peptide_mass = compute_peptide_mass(peptide)
-    peptide_mz = (peptide_mass + precursor_charge * deepnovo_config.mass_H) / precursor_charge
-    precursor_ppm = (precursor_mz - peptide_mz) / peptide_mz * 1e6
-    precursor_ppm_list.append(precursor_ppm)
-  mean_precursor_ppm = np.mean(precursor_ppm_list)
-
-  #print("mean_precursor_ppm =", mean_precursor_ppm)
-  return mean_precursor_ppm
-
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
-# ~ print("ppm =", calculate_mass_shift_ppm(input_feature_file))
-
-
-# correct precursor_mz given ppm
-# corrected_mz = precursor_mz / (1 + ppm / 1e6)
-def correct_mass_shift_ppm(input_feature_file, ppm):
-  print("correct_mass_shift_ppm()")
-
-  print("input_feature_file = ", input_feature_file)
-  print("ppm =", ppm)
-
-  output_feature_file = input_feature_file + ".mass_corrected"
-  print("output_feature_file =", output_feature_file)
-
-  csv_reader = csv.DictReader(open(input_feature_file))
-  csv_writer = csv.DictWriter(open(output_feature_file, mode='w'), csv_reader.fieldnames)
-  csv_writer.writeheader()
-  for row in csv_reader:
-    precursor_mz = float(row['m/z'])
-    corrected_mz = precursor_mz / (1 + ppm / 1e6)
-    row['m/z'] = corrected_mz
-    csv_writer.writerow(row)
-
-# ~ labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
-# ~ ppm = calculate_mass_shift_ppm(labeled_feature_file)
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled/unlabeled"
-# ~ correct_mass_shift_ppm(input_feature_file, ppm)
-
-
 # randomly split a feature file into train/valid/test files for training
 def split_feature_training(input_feature_file, proportion):
   print("split_feature_training()")
@@ -271,9 +166,114 @@ def split_feature_training_noshare(input_feature_file, proportion):
   print("num_valid =", num_valid)
   print("num_test =", num_test)
 
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected"
+# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected"
 # ~ proportion = [0.90, 0.05, 0.05]
 # ~ split_feature_training_noshare(input_feature_file, proportion)
+
+
+# calculate peptide mass = N-terminus + amino acids + C-terminus
+def compute_peptide_mass(peptide):
+  """TODO(nh2tran): docstring.
+  """
+
+  peptide_mass = (deepnovo_config.mass_N_terminus
+                  + sum(deepnovo_config.mass_AA[aa] for aa in peptide)
+                  + deepnovo_config.mass_C_terminus)
+
+  return peptide_mass
+
+# ~ peptide = 'AAAAAAALQAK'
+# ~ print(compute_peptide_mass(peptide))
+
+
+# parse peptide sequence with modifications
+# C(+57.02) >> C(Carbamidomethylation)
+# M(+15.99) >> M(Oxidation)
+# NQ(+.98) >> NQ(Deamidation)
+def parse_sequence_with_mod(raw_sequence):
+  #print("parse_sequence_with_mod()")
+
+  raw_sequence_len = len(raw_sequence)
+  index = 0
+  peptide = []
+  while index < raw_sequence_len:
+    if raw_sequence[index] == "(":
+      if peptide[-1] == "C" and raw_sequence[index:index + 8] == "(+57.02)":
+        peptide[-1] = "C(Carbamidomethylation)"
+        index += 8
+      elif peptide[-1] == 'M' and raw_sequence[index:index + 8] == "(+15.99)":
+        peptide[-1] = 'M(Oxidation)'
+        index += 8
+      elif peptide[-1] == 'N' and raw_sequence[index:index + 6] == "(+.98)":
+        peptide[-1] = 'N(Deamidation)'
+        index += 6
+      elif peptide[-1] == 'Q' and raw_sequence[index:index + 6] == "(+.98)":
+        peptide[-1] = 'Q(Deamidation)'
+        index += 6
+      else:  # unknown modification
+        print("ERROR: unknown modification!")
+        print("raw_sequence = ", raw_sequence)
+        sys.exit()
+    else:
+      peptide.append(raw_sequence[index])
+      index += 1
+
+  return peptide
+
+# ~ raw_sequence = 'RHM(+15.99)GIGKR'
+# ~ print(parse_sequence_with_mod(raw_sequence))
+
+
+# calculate ppm of precursor_mz against peptide_mz
+# ppm / 1e6 = (precursor_mz - peptide_mz) / peptide_mz 
+def calculate_mass_shift_ppm(input_feature_file):
+  #print("calculate_mass_shift_ppm()")
+
+  #print("input_feature_file = ", input_feature_file)
+
+  precursor_ppm_list = []
+  csv_reader = csv.DictReader(open(input_feature_file))
+  for row in csv_reader:
+    peptide = parse_sequence_with_mod(row['seq'])
+    precursor_mz = float(row['m/z'])
+    precursor_charge = float(row['z'])
+    peptide_mass = compute_peptide_mass(peptide)
+    peptide_mz = (peptide_mass + precursor_charge * deepnovo_config.mass_H) / precursor_charge
+    precursor_ppm = (precursor_mz - peptide_mz) / peptide_mz * 1e6
+    precursor_ppm_list.append(precursor_ppm)
+  mean_precursor_ppm = np.mean(precursor_ppm_list)
+
+  #print("mean_precursor_ppm =", mean_precursor_ppm)
+  return mean_precursor_ppm
+
+# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.test.noshare"
+# ~ print("ppm =", calculate_mass_shift_ppm(input_feature_file))
+
+
+# correct precursor_mz given ppm
+# corrected_mz = precursor_mz / (1 + ppm / 1e6)
+def correct_mass_shift_ppm(input_feature_file, ppm):
+  print("correct_mass_shift_ppm()")
+
+  print("input_feature_file = ", input_feature_file)
+  print("ppm =", ppm)
+
+  output_feature_file = input_feature_file + ".mass_corrected"
+  print("output_feature_file =", output_feature_file)
+
+  csv_reader = csv.DictReader(open(input_feature_file))
+  csv_writer = csv.DictWriter(open(output_feature_file, mode='w'), csv_reader.fieldnames)
+  csv_writer.writeheader()
+  for row in csv_reader:
+    precursor_mz = float(row['m/z'])
+    corrected_mz = precursor_mz / (1 + ppm / 1e6)
+    row['m/z'] = corrected_mz
+    csv_writer.writerow(row)
+
+# ~ labeled_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled"
+# ~ ppm = calculate_mass_shift_ppm(labeled_feature_file)
+# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.unlabeled"
+# ~ correct_mass_shift_ppm(input_feature_file, ppm)
 
 
 # split a feature file into labeled and unlabeled files
@@ -314,13 +314,13 @@ def split_feature_unlabel(input_feature_file):
   print("num_labeled =", num_labeled)
   print("num_unlabeled =", num_unlabeled)
 
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv"
+# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv"
 # ~ split_feature_unlabel(input_feature_file)
 
 
 # merge multiple mgf files into one, adding fraction ID to scan ID
 def merge_mgf_file(input_file_list, fraction_list, output_file):
-  print("cat_file_mgf()")
+  print("merge_mgf_file()")
   
   # iterate over mgf files and their lines
   counter = 0
@@ -339,8 +339,8 @@ def merge_mgf_file(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15/"
-# ~ fraction_list = range(0, 15+1)
+# ~ folder_path = "data.training/aa.hla.celine.science_2018/human_lc2/"
+# ~ fraction_list = range(0, 1+1)
 # ~ merge_mgf_file(
     # ~ input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
     # ~ fraction_list=fraction_list,
@@ -376,8 +376,8 @@ def merge_feature_file(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15/"
-# ~ fraction_list = range(0, 15+1)
+# ~ folder_path = "data.training/aa.hla.celine.science_2018/human_lc2/"
+# ~ fraction_list = range(0, 1+1)
 # ~ merge_feature_file(
     # ~ input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
     # ~ fraction_list=fraction_list,

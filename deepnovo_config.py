@@ -232,7 +232,7 @@ AA_MATCH_PRECISION = 0.1
 # during training or test_true_feeding: 
 # skip peptide length > MAX_LEN
 # assign peptides to buckets of the same length for efficient padding
-if FLAGS.training or FLAGS.test_true_feeding:
+if FLAGS.train or FLAGS.test_true_feeding:
   MAX_LEN = 30
   _buckets = [12, 22, 32]
   print("MAX_LEN ", MAX_LEN)

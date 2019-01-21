@@ -17,6 +17,7 @@ import re
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
 
+import csv
 import numpy as np
 import math
 import deepnovo_config
@@ -40,19 +41,18 @@ def compute_peptide_mass(peptide):
 # ~ print(compute_peptide_mass(peptide))
 
 
-def read_feature_accuracy(input_file, split_char):
+def read_feature_accuracy(input_file):
 
   feature_list = []
-  with open(input_file, 'r') as handle:
-    header_line = handle.readline()
-    for line in handle:
-      line = re.split(split_char, line)
+  with open(input_file, 'r') as input_handle:
+    csv_reader = csv.DictReader(input_handle, delimiter='\t')
+    for row in csv_reader:
       feature = {}
-      feature["feature_id"] = line[0]
-      feature["feature_area"] = math.log10(max(float(line[1]), 1.0))
-      feature["predicted_score"] = float(line[4])
-      feature["recall_AA"] = float(line[5])
-      feature["predicted_len"] = float(line[6])
+      feature['feature_id'] = row['feature_id']
+      feature['feature_area'] = math.log10(max(float(row['feature_area']), 1.0))
+      feature['predicted_score'] = float(row['predicted_score'])
+      feature['recall_AA'] = float(row['recall_AA'])
+      feature['predicted_len'] = float(row['predicted_len'])
       feature_list.append(feature)
   return feature_list
 
@@ -63,7 +63,10 @@ def find_score_cutoff(accuracy_file, accuracy_cutoff):
   print("".join(["="] * 80)) # section-separating line
   print("find_score_cutoff()")
 
-  feature_list = read_feature_accuracy(accuracy_file, '\t|\r|\n')
+  print('accuracy_file =', accuracy_file)
+  print('accuracy_cutoff =', accuracy_cutoff)
+
+  feature_list = read_feature_accuracy(accuracy_file)
   feature_list_sorted = sorted(feature_list, key=lambda k: k['predicted_score'], reverse=True)
   recall_cumsum = np.cumsum([f['recall_AA'] for f in feature_list_sorted])
   predicted_len_cumsum = np.cumsum([f['predicted_len'] for f in feature_list_sorted])
@@ -77,7 +80,7 @@ def find_score_cutoff(accuracy_file, accuracy_cutoff):
   return cutoff_score
 
 
-def select_top_score(input_file, output_file, split_char, col_score, score_cutoff):
+def select_top_score(input_file, output_file, score_cutoff):
   """TODO(nh2tran): docstring."""
 
   print("".join(["="] * 80)) # section-separating line
@@ -91,30 +94,25 @@ def select_top_score(input_file, output_file, split_char, col_score, score_cutof
   select_feature = 0
   with open(input_file, 'r') as input_handle:
     with open(output_file, 'w') as output_handle:
-      # header
-      header_line = input_handle.readline()
-      print(header_line, file=output_handle, end="")
-      predicted_list = []
-      for line in input_handle:
+      csv_reader = csv.DictReader(input_handle, delimiter='\t')
+      csv_writer = csv.DictWriter(output_handle, csv_reader.fieldnames, delimiter='\t')
+      csv_writer.writeheader()
+      for row in csv_reader:
         total_feature += 1
-        line_split = re.split(split_char, line)
-        predicted = {}
-        predicted["line"] = line
-        predicted["score"] = float(line_split[col_score]) if line_split[col_score] else -999
-        if predicted["score"] >= score_cutoff:
+        predicted_score = float(row['predicted_score']) if row['predicted_score'] else -999
+        if predicted_score >= score_cutoff:
           select_feature += 1
-          print(predicted["line"], file=output_handle, end="")
+          csv_writer.writerow(row)
   print('total_feature = ', total_feature)
   print('select_feature = ', select_feature)
           
-accuracy_cutoff = 0.95
-accuracy_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.accuracy"
-score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
-input_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv.deepnovo_denovo"
-output_file = input_file + ".top95"
-split_char = '\t|\n'
-col_score = deepnovo_config.pcol_score_max
-select_top_score(input_file, output_file, split_char, col_score, score_cutoff)
+# ~ accuracy_cutoff = 0.95
+# ~ accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.deepnovo_denovo.accuracy"
+# ~ score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
+# ~ sys.exit()
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.deepnovo_denovo"
+# ~ output_file = input_file + ".top95"
+# ~ select_top_score(input_file, output_file, score_cutoff)
 
 
 def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence):
@@ -161,12 +159,12 @@ def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char
   print('db_count = ', db_count)
   print('denovo_count = ', denovo_count)
 
-input_fasta_file = "data/uniprot_sprot.human.fasta"
-input_denovo_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv.deepnovo_denovo.top95"
-output_file = input_denovo_file + ".lookup"
-split_char = '\t|\n'
-col_sequence = 2
-database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence)
+# ~ input_fasta_file = "data/uniprot_sprot.human.fasta"
+# ~ input_denovo_file = "data.training/bassani.hla.2018_10_18.correct_mass_shift/unidentified_features.csv.deepnovo_denovo.top95"
+# ~ output_file = input_denovo_file + ".lookup"
+# ~ split_char = '\t|\n'
+# ~ col_sequence = 2
+# ~ database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence)
 
 
 def select_top_k(input_file, output_file, top_k, split_char, col_score):

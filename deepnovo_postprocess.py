@@ -16,6 +16,7 @@ import re
 
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
+import Levenshtein
 
 import csv
 import numpy as np
@@ -36,7 +37,7 @@ def compute_peptide_mass(peptide):
 
   return peptide_mass
 
-# ~ peptide = 'AAAAAAALQAK'
+# ~ peptide = 'TASSQRLR'
 # ~ print(peptide)
 # ~ print(compute_peptide_mass(peptide))
 
@@ -113,6 +114,144 @@ def select_top_score(input_file, output_file, score_cutoff):
 # ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.deepnovo_denovo"
 # ~ output_file = input_file + ".top95"
 # ~ select_top_score(input_file, output_file, score_cutoff)
+
+
+def convert_I_to_L(input_file, output_file):
+  """TODO(nh2tran): docstring."""
+
+  print("".join(["="] * 80)) # section-separating line
+  print("convert_I_to_L()")
+
+  print('input_file = ', input_file)
+  print('output_file = ', output_file)
+
+  with open(input_file, 'r') as input_handle:
+    with open(output_file, 'w') as output_handle:
+      csv_reader = csv.DictReader(input_handle, delimiter='\t')
+      csv_reader.fieldnames.append('before_I_to_L')
+      csv_writer = csv.DictWriter(output_handle, csv_reader.fieldnames, delimiter='\t')
+      csv_writer.writeheader()
+      for row in csv_reader:
+        predicted_sequence = row['predicted_sequence']
+        row['before_I_to_L'] = predicted_sequence
+        row['predicted_sequence'] = predicted_sequence.replace('I', 'L')
+        csv_writer.writerow(row)
+          
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.deepnovo_denovo"
+# ~ output_file = input_file + ".I_to_L"
+# ~ convert_I_to_L(input_file, output_file)
+
+
+def compute_distance(predicted_sequence, consensus_sequence):
+  """TODO(nh2tran): docstring.
+  """
+
+  #~ print("".join(["="] * 80)) # section-separating line ===
+  #~ print("compute_distance()")
+
+  # simplify the modifications
+  modification_list = ['C(Carbamidomethylation)', 'M(Oxidation)', 'N(Deamidation)', 'Q(Deamidation)']
+  simplified_list = ['c', 'm', 'n', 'q']
+  for x in simplified_list:
+    assert x not in deepnovo_config.vocab_reverse
+  for x, y in zip(modification_list, simplified_list):
+    predicted_sequence = [aa.replace(x, y) for aa in predicted_sequence]
+    consensus_sequence = [aa.replace(x, y) for aa in consensus_sequence]
+  predicted_sequence = ''.join(predicted_sequence)
+  consensus_sequence = ''.join(consensus_sequence)
+
+  return Levenshtein.distance(predicted_sequence, consensus_sequence)
+
+
+# group predicted sequences of the same mass together
+# vote the consensus sequence
+# replace the predicted by the consensus to correct errors: AB-BA, Q-AG, N-GG, etc.
+def correct_by_consensus(input_file, output_file):
+  """TODO(nh2tran): docstring."""
+
+  print("".join(["="] * 80)) # section-separating line
+  print("correct_by_consensus()")
+
+  print('input_file = ', input_file)
+  print('output_file = ', output_file)
+
+  total_feature = 0
+  empty_feature = 0
+  mass_dict = {}
+  with open(input_file, 'r') as input_handle:
+    with open(output_file, 'w') as output_handle:
+      csv_reader = csv.DictReader(input_handle, delimiter='\t')
+      csv_reader.fieldnames.append('before_consensus')
+      csv_writer = csv.DictWriter(output_handle, csv_reader.fieldnames, delimiter='\t')
+      csv_writer.writeheader()
+
+      # build the sequence mass dictionary
+      # all sequences with the same mass are grouped together
+      # (same mass up to resolution 1e4)
+      for row in csv_reader:
+        total_feature += 1
+        predicted_sequence = row['predicted_sequence']
+        # skip empty sequences that DeepNovo couldn't find a suitable candidate with the given mass
+        if predicted_sequence == '':
+          empty_feature += 1
+          continue
+        # save the original predicted sequence before correcting it later
+        row['before_consensus'] = predicted_sequence
+
+        predicted_sequence = predicted_sequence.split(',')
+        predicted_score = float(row['predicted_score'])
+        sequence_mass_index = int(round(compute_peptide_mass(predicted_sequence)
+                                        * deepnovo_config.KNAPSACK_AA_RESOLUTION))
+        feature = {'row': row,
+                   'predicted_sequence': predicted_sequence,
+                   'predicted_score': predicted_score}
+        if sequence_mass_index in mass_dict:
+          mass_dict[sequence_mass_index].append(feature)
+        else:
+          mass_dict[sequence_mass_index] = [feature]
+      # check if all sequences have been assigned
+      assigned_feature = sum([len(x) for x in mass_dict.values()])
+      assert total_feature - empty_feature == assigned_feature
+
+      # for each group of sequences of the same mass,
+      # vote the consensus sequence;
+      # calculate Levenshtein distance between each sequence and the consensus;
+      # if 1 <= distance <= 2, replace the sequence by the consensus;
+      # (distance = 2 examples: AB-BA, Q-AG, N-GG)
+      # write to output.
+      for group in mass_dict.values():
+        if len(group) == 1:
+          consensus_sequence = group[0]['predicted_sequence']
+        else:
+          # vote the consensus sequence
+          # the easy way is to find the sequence with the highest score and frequency
+          # (more complicated ways: De Bruijn graph, alignment)
+          consensus_candidate = {}
+          for feature in group:
+            predicted_sequence = feature['predicted_sequence']
+            predicted_score_prob = 100*math.exp(feature['predicted_score'])
+            predicted_sequence = ','.join(predicted_sequence)
+            if predicted_sequence in consensus_candidate:
+              consensus_candidate[predicted_sequence] += predicted_score_prob
+            else:
+              consensus_candidate[predicted_sequence] = predicted_score_prob
+          consensus_sequence = max(consensus_candidate.iterkeys(), key=(lambda key: consensus_candidate[key]))
+          consensus_sequence = consensus_sequence.split(',')
+
+        # calculate distance, correct sequence by the consensus, write to output
+        for feature in group:
+          distance = compute_distance(feature['predicted_sequence'], consensus_sequence)
+          if 1 <= distance <= 2:
+            feature['row']['predicted_sequence'] = ','.join(consensus_sequence)
+          csv_writer.writerow(feature['row'])
+
+      print('total_feature = ', total_feature)
+      print('empty_feature = ', empty_feature)
+      print('assigned_feature = ', assigned_feature)
+          
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.deepnovo_denovo.I_to_L"
+# ~ output_file = input_file + ".consensus"
+# ~ correct_by_consensus(input_file, output_file)
 
 
 def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence):

@@ -5,7 +5,7 @@ from Bio.SeqIO import FastaIO
 
 denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
 denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step4.peptide"
-fasta_file = "data/HUMAN.fasta"
+fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
 
 
 def drop_mod(peptide_str):

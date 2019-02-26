@@ -307,19 +307,19 @@ input_spectrum_file_train = "data.training/aa.hla.celine.science_2018/human_lc2/
 input_feature_file_train = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.train.noshare"
 input_spectrum_file_valid = "data.training/aa.hla.celine.science_2018/human_lc2/spectrum.mgf"
 input_feature_file_valid = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.valid.noshare"
-input_spectrum_file_test = "data.training/aa.hla.celine.science_2018/human_lc2/spectrum.mgf"
-input_feature_file_test = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.test.noshare"
+input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
+input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
 
 # denovo files
-denovo_input_spectrum_file = "data.training/aa.hla.celine.science_2018/human_lc2/spectrum.mgf"
-denovo_input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.test.noshare"
+denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
+denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 
 # test accuracy
 predicted_format = "deepnovo"
-target_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.test.noshare"
-predicted_file = denovo_output_file
-# ~ predicted_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo"
+target_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected"
+# ~ predicted_file = denovo_output_file
+predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
 accuracy_file = predicted_file + ".accuracy"
 denovo_only_file = predicted_file + ".denovo_only"
 scan2fea_file = predicted_file + ".scan2fea"

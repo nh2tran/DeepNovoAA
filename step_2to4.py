@@ -3,10 +3,10 @@ import csv
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
 
-thres = -0.57
-denovo_file = 'data/feature.csv.unlabeled.mass_corrected.deepnovo_denovo'
-denovo_peptide_file = 'data/step4denovo.peptides'
-fasta_file = 'data/HUMAN.fasta'
+thres = -0.51
+denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
+denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step4.peptide"
+fasta_file = "data/HUMAN.fasta"
 
 
 def drop_mod(peptide_str):
@@ -43,7 +43,6 @@ if __name__ == '__main__':
     with open(fasta_file, 'r') as input_fasta_handle:
         record_list = list(SeqIO.parse(input_fasta_handle, "fasta"))
         print("Number of protein sequences: ", len(record_list))
-    record_list = [record for record in record_list if 'CONTAMINANTS' not in record.name]
     human_protein_list = [str(record.seq) for record in record_list]
 
     # with open("./I_to_L/human_protein_origin.cc.txt", 'w') as f:

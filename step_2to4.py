@@ -38,10 +38,6 @@ if __name__ == '__main__':
             elif float(line[score_index]) < thres:
                 continue
             else:
-                length = len(raw_seq.split(','))
-                if length < 8 or length > 12:
-                    # hla peptides, skip those too long or too short
-                    continue
                 denovo_peptide_set.add(raw_seq)
     print("top scoring denovo peptides: {}".format(len(denovo_peptide_set)))
     with open(fasta_file, 'r') as input_fasta_handle:

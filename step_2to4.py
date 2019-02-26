@@ -3,7 +3,6 @@ import csv
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
 
-thres = -0.51
 denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
 denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step4.peptide"
 fasta_file = "data/HUMAN.fasta"
@@ -27,15 +26,12 @@ if __name__ == '__main__':
         reader = csv.reader(fr, delimiter='\t')
         names = next(reader)
         seq_index = names.index('predicted_sequence')
-        score_index = names.index('predicted_score')
         for line in reader:
+            if not line[seq_index]:
+                continue
             raw_seq = line[seq_index]
             raw_seq = drop_mod(raw_seq)
-            if not line[score_index]:
-                continue
             if raw_seq in denovo_peptide_set:
-                continue
-            elif float(line[score_index]) < thres:
                 continue
             else:
                 denovo_peptide_set.add(raw_seq)

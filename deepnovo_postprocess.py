@@ -254,6 +254,41 @@ def correct_by_consensus(input_file, output_file):
 # ~ correct_by_consensus(input_file, output_file)
 
 
+def filter_by_minlen(input_file, output_file, minlen):
+  """TODO(nh2tran): docstring."""
+
+  print("".join(["="] * 80)) # section-separating line
+  print("filter_by_minlen()")
+  print('input_file = ', input_file)
+  print('output_file = ', output_file)
+  print('minlen = ', minlen)
+
+  total_feature = 0
+  minlen_feature = 0
+  removed_feature = 0
+  with open(input_file, 'r') as input_handle:
+    with open(output_file, 'w') as output_handle:
+      csv_reader = csv.DictReader(input_handle, delimiter='\t')
+      csv_writer = csv.DictWriter(output_handle, csv_reader.fieldnames, delimiter='\t')
+      csv_writer.writeheader()
+      for row in csv_reader:
+        total_feature += 1
+        predicted_sequence_len = len(re.split(',', row['predicted_sequence']))
+        if predicted_sequence_len >= minlen:
+          csv_writer.writerow(row)
+          minlen_feature += 1
+        else:
+          removed_feature += 1
+  print('total_feature = ', total_feature)
+  print('minlen_feature = ', minlen_feature)
+  print('removed_feature = ', removed_feature)
+          
+# ~ minlen = 5
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
+# ~ output_file = input_file + ".minlen" + str(minlen)
+# ~ filter_by_minlen(input_file, output_file, minlen)
+
+
 def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence):
 
   print("".join(["="] * 80)) # section-separating line
@@ -341,39 +376,6 @@ def select_top_k(input_file, output_file, top_k, split_char, col_score):
 #~ split_char = ',|\n'
 #~ col_score = 5
 #~ input_file = "data.training/dia.urine.2018_03_29/peaks.denovo.csv"
-
-
-def filter_min_len(input_file, output_file, min_len):
-  """TODO(nh2tran): docstring."""
-
-  print("".join(["="] * 80)) # section-separating line
-  print("filter_min_len()")
-  print('input_file = ', input_file)
-  print('output_file = ', output_file)
-  print('min_len = ', min_len)
-
-  total_count = 0
-  min_len_count = 0
-  with open(input_file, 'r') as input_handle:
-    with open(output_file, 'w') as output_handle:
-      # header
-      header_line = input_handle.readline()
-      print(header_line, file=output_handle, end="")
-      col_sequence = deepnovo_config.pcol_sequence
-      for line in input_handle:
-        total_count += 1
-        line_split = re.split('\t|\n', line)
-        predicted_sequence = line_split[col_sequence]
-        if predicted_sequence and len(re.split(',', predicted_sequence)) >= min_len:
-          print(line, file=output_handle, end="")
-          min_len_count += 1
-  print('min_len_count = ', min_len_count)
-  print('total_count = ', total_count)
-          
-#~ min_len = 5
-#~ input_file = "data.training/dia.abrf.2018_03_27/testing.unlabeled.csv.deepnovo_denovo"
-#~ output_file = input_file + ".minlen_" + str(min_len)
-#~ filter_min_len(input_file, output_file, min_len)
 
 
 # filter features of single-feature (DDA-like) scan or multi-feature scan (DIA)

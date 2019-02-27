@@ -2,7 +2,7 @@ import csv
 
 
 labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
-denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step4.peptide"
+denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step4.output_peptide_list"
 output_fasta_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step5.peptide_list.fasta"
 
 

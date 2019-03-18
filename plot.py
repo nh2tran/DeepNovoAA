@@ -2,30 +2,97 @@ import re
 import math
 import numpy as np
 import pandas as pd
+import csv
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
 from matplotlib_venn import venn2
 from matplotlib_venn import venn3
-matplotlib.rcParams.update({'font.size': 15})
+matplotlib.rcParams.update({'font.size': 11})
 
 
-# ~ file_path = "testing_plasma.venn.xlsx"
-# ~ #~ excel = pd.ExcelFile(file_path)
-# ~ pecan_set = set(pd.read_excel(file_path, sheetname='pecan_unique')['pecan_unique'].values)
-# ~ openswath_set = set(pd.read_excel(file_path, sheetname='openswath_unique')['openswath_unique'].values)
-# ~ spectronaut_set = set(pd.read_excel(file_path, sheetname='spectronaut_unique')['spectronaut_unique'].values)
-# ~ #~ inhouse_set = set(pd.read_excel(file_path, sheetname='inhouse_unique')['inhouse_unique'].values)
-# ~ top90_set = set(pd.read_excel(file_path, sheetname='top90_final')['top90_final'].values)
-# ~ print('len(pecan_set) =', len(pecan_set))
-# ~ print('len(spectronaut_set) =', len(spectronaut_set))
-# ~ #~ print('len(inhouse_set) =', len(inhouse_set))
-# ~ print('len(top90_set) =', len(top90_set))
+# ~ # TEMP
+# ~ file_path = "step_5.output_neoantigen_criteria.xlsx"
+# ~ value_list = pd.read_excel(file_path, sheetname='5_targets_152_candidates')['total_abundance'].values
+# ~ fig, ax = pyplot.subplots()
+# ~ pyplot.boxplot([value_list], labels=['total_abundance'])
+# ~ ax.set_yscale('log')
+# ~ ax.set_ylabel('Total abundance of supporting PSMs')
+# ~ ax.spines["top"].set_visible(False)
+# ~ ax.spines["right"].set_visible(False)
+# ~ # GRLAFFLKY
+# ~ pyplot.plot([1], [134464000], color='red', marker='o', markersize=6)
+# ~ pyplot.savefig("temp.png")
 
-# ~ set_labels = ('DeepNovo', 'PECAN', 'Spectronaut')
-# ~ venn_plot = venn3(subsets=[top90_set, pecan_set, spectronaut_set], set_labels=set_labels)
-# ~ pyplot.savefig("venn3.svg")
 
+def read_netmhcpan_csv(input_file):
+
+  best_nM_list = []
+  best_rank_list = []
+  with open(input_file, 'r') as input_handle:
+    csv_reader = csv.DictReader(input_handle, delimiter=',')
+    for row in csv_reader:
+      best_nM = min([float(row[x]) for x in ['nM1', 'nM2', 'nM3', 'nM4']])
+      best_rank = min([float(row[x]) for x in ['Rank1', 'Rank2', 'Rank3', 'Rank4']])
+      best_nM_list.append(best_nM)
+      best_rank_list.append(best_rank)
+  return best_nM_list, best_rank_list
+
+
+def draw_figure2_boxplot():
+
+  denovo_path = "temp.manuscript/step6.denovo_peptide.NetMHCpan.xls.csv"
+  db_path = "temp.manuscript/step6.db_peptide.NetMHCpan.xls.csv"
+  iedb_path = "temp.manuscript/step6.iedb_peptide.NetMHCpan.xls.csv"
+  denovo_nM_list, denovo_rank_list = read_netmhcpan_csv(denovo_path)
+  db_nM_list, db_rank_list = read_netmhcpan_csv(db_path)
+  iedb_nM_list, iedb_rank_list = read_netmhcpan_csv(iedb_path)
+
+  nM_list = [denovo_nM_list, db_nM_list, iedb_nM_list]
+  print([len(x) for x in nM_list])
+  fig, ax = pyplot.subplots()
+  pyplot.boxplot(nM_list, labels=['De novo', 'Database', 'IEDB'])
+  ax.set_yscale('log')
+  ax.set_ylabel('Binding affinity (nM, log-scale)')
+  ax.spines["top"].set_visible(False)
+  ax.spines["right"].set_visible(False)
+  # 500-nM threshold
+  pyplot.plot([0, 6], [500, 500], color='black', linestyle='--', linewidth=1)
+  pyplot.savefig("figure2.boxplot_nM.png")
+
+  rank_list = [denovo_rank_list, db_rank_list, iedb_rank_list]
+  print([len(x) for x in rank_list])
+  fig, ax = pyplot.subplots()
+  pyplot.boxplot(rank_list, labels=['De novo', 'Database', 'IEDB'])
+  ax.set_yscale('log')
+  ax.set_ylabel('Binding affinity rank (%, log-scale)')
+  ax.spines["top"].set_visible(False)
+  ax.spines["right"].set_visible(False)
+  # 2% and 0.5% threshold
+  pyplot.plot([0, 6], [2, 2], color='black', linestyle='--', linewidth=1)
+  pyplot.plot([0, 6], [0.5, 0.5], color='black', linestyle='--', linewidth=1)
+  pyplot.savefig("figure2.boxplot_rank.png")
+
+# ~ draw_figure2_boxplot()
+
+
+def draw_figure2_venn():
+
+  file_path = "temp.manuscript/deepnovo.aa.figure_2.step6.xlsx"
+  denovo_set = set(pd.read_excel(file_path, sheet_name='denovo_peptide')['denovo_peptide'].values)
+  db_set = set(pd.read_excel(file_path, sheet_name='db_peptide')['db_peptide'].values)
+  iedb_set = set(pd.read_excel(file_path, sheet_name='iedb_peptide')['iedb_peptide'].values)
+  set_labels = ('De novo', 'Database', 'IEDB')
+  venn_plot = venn3(subsets=[denovo_set, db_set, iedb_set], set_labels=set_labels)
+  venn_plot.get_patch_by_id('100').set_color('red')
+  venn_plot.get_patch_by_id('100').set_alpha(0.75)
+  venn_plot.get_patch_by_id('010').set_color('skyblue')
+  venn_plot.get_patch_by_id('010').set_alpha(1.0)
+  venn_plot.get_patch_by_id('001').set_color('grey')
+  venn_plot.get_patch_by_id('001').set_alpha(0.5)
+  pyplot.savefig("venn3.svg")
+
+# ~ draw_figure2_venn()
 
 
 def plot_spectrum_array(spectrum_array, figure_name):
@@ -195,21 +262,15 @@ def get_accuracy_score(accuracy_file):
 # figure2.accuracy.score.png
 def draw_figure2_accuracy_score():
 
-  accuracy_file_oc = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.accuracy"
-  accuracy_file_uti = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.accuracy"
-  accuracy_file_plasma = "data.training/bassani.hla.2018_10_18.correct_mass_shift/identified_features.csv.valid.nodup.deepnovo_denovo.accuracy"
-  # ~ accuracy_file_oc = "data.training/dia.hla.elife.jurkat_oxford/testing_jurkat_oxford.unlabeled.csv.deepnovo_denovo.accuracy"
-  # ~ accuracy_file_uti = "data.training/dia.hla.elife.jurkat_oxford/testing_jurkat_oxford.unlabeled.csv.deepnovo_denovo.accuracy"
-  # ~ accuracy_file_plasma = "data.training/dia.hla.elife.jurkat_oxford/testing_jurkat_oxford.unlabeled.csv.deepnovo_denovo.accuracy"
-  x_oc, y_oc = get_accuracy_score(accuracy_file_oc)
-  x_uti, y_uti = get_accuracy_score(accuracy_file_uti)
-  x_plasma, y_plasma = get_accuracy_score(accuracy_file_plasma)
+  accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
+  x_test, y_test = get_accuracy_score(accuracy_file)
   fig, ax = pyplot.subplots()
-  plot_oc, = pyplot.plot(x_oc, y_oc, '-o', linewidth=2.0, color='chocolate', markeredgecolor='chocolate', alpha=0.75)
-  plot_uti, = pyplot.plot(x_uti, y_uti, '-s', linewidth=2.0, color='orange', markeredgecolor='orange', alpha=0.75)
-  plot_plasma, = pyplot.plot(x_plasma, y_plasma, '-^', linewidth=2.0, color='salmon', markeredgecolor='salmon', alpha=0.75)
-  pyplot.legend([plot_oc, plot_uti, plot_plasma], ['OC', 'UTI', 'Plasma'], loc='lower right')
-  pyplot.title('DeepNovo confidence score for quality control')
+  plot_test, = pyplot.plot(x_test, y_test, '-o', linewidth=2.0, color='red', markeredgecolor='red', alpha=0.75)
+  plot_cutoff_y, = pyplot.plot([0, 100], [95, 95], '--', linewidth=1.0, color='red', markeredgecolor='red', alpha=0.75)
+  plot_cutoff_x, = pyplot.plot([75, 75], [0, 100], '--', linewidth=1.0, color='red', markeredgecolor='red', alpha=0.75)
+  pyplot.legend([plot_test, plot_cutoff_y], ['Score distribution', '95% cutoff'], loc='lower right')
+  pyplot.yticks([0, 20, 40, 60, 80, 95, 100], ['0', '20', '40', '60', '80', '95', '100'])
+  # ~ pyplot.title('DeepNovo confidence score for quality control')
   ax.set_xlabel('De novo confidence score')
   ax.set_xlim([0, 105])
   ax.set_ylim([0, 105])
@@ -221,7 +282,7 @@ def draw_figure2_accuracy_score():
   pyplot.savefig('figure2.accuracy.score.png')
   # ~ pyplot.savefig('figure2.accuracy.score.svg')
 
-draw_figure2_accuracy_score()
+# ~ draw_figure2_accuracy_score()
 
 
 

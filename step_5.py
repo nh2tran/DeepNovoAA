@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+
+import sys
 import csv
 import re
 from Bio import SeqIO
@@ -15,10 +17,35 @@ psm_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_4.DB search psm
 netmhc_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.denovo_peptide.NetMHCpan.xls.csv"
 WEAK_BINDING = 2.0 # NetMHC weak binding rank
 STRONG_BINDING = 0.5 # NetMHC strong binding rank
-db_fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
+reference_fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
 labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
+snp_file = "data.training/aa.hla.bassani.nature_2016.mel_15/supp_data5_snp.csv"
+snp_enst_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15/supp_data5_snp.enst.fasta"
+snp_sample_id = 'MM15'
 output_neoantigen_criteria = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.output_neoantigen_criteria.csv"
 
+
+AA_3_to_1 = {
+  'Ala':'A',
+  'Arg':'R',
+  'Asn':'N',
+  'Asp':'D',
+  'Cys':'C',
+  'Glu':'E',
+  'Gln':'Q',
+  'Gly':'G',
+  'His':'H',
+  'Ile':'I',
+  'Leu':'L',
+  'Lys':'K',
+  'Met':'M',
+  'Phe':'F',
+  'Pro':'P',
+  'Ser':'S',
+  'Thr':'T',
+  'Trp':'W',
+  'Tyr':'Y',
+  'Val':'V'}
 
 CODON_AA = { # dictionary {codon: aa}
   'TTT':'F',
@@ -159,46 +186,108 @@ def read_denovo_psm(psm_file):
   return denovo_peptide_psm
 
 
-def read_denovo_netmhc(netmhc_file):
+def read_netmhc(netmhc_file):
 
-  print("read_denovo_netmhc()")
+  print("read_netmhc()")
   print("netmhc_file:", netmhc_file)
 
   # store NetMHC predictions of denovo peptides in a dictionary 
   # {peptide: {'best_nM': , 'best_rank': , 'is_weak_binding': , 'is_strong_binding': }}
-  denovo_peptide_netmhc = {}
+  peptide_netmhc = {}
   with open(netmhc_file, 'r') as input_handle:
     csv_reader = csv.DictReader(input_handle, delimiter=',')
     for row in csv_reader:
       peptide = row['Peptide']
-      if peptide not in denovo_peptide_netmhc:
+      if peptide not in peptide_netmhc:
         best_nM = min([float(row[x]) for x in ['nM1', 'nM2', 'nM3', 'nM4']])
         best_rank = min([float(row[x]) for x in ['Rank1', 'Rank2', 'Rank3', 'Rank4']])
         is_weak_binding = int(best_rank <= WEAK_BINDING)
         is_strong_binding = int(best_rank <= STRONG_BINDING)
-        denovo_peptide_netmhc[peptide] = {
+        peptide_netmhc[peptide] = {
           'best_nM': best_nM,
           'best_rank': best_rank,
           'is_weak_binding': is_weak_binding,
           'is_strong_binding': is_strong_binding}
       else:
-        print("Warning: duplicate peptide found in denovo_peptide_netmhc:", peptide)
+        print("Warning: duplicate peptide found in peptide_netmhc:", peptide)
 
-  print("Number of denovo peptides:", len(denovo_peptide_netmhc))
-  print("Number of denovo peptides with weak binding: ", sum([x['is_weak_binding'] for x in denovo_peptide_netmhc.values()]))
-  print("Number of denovo peptides with strong binding: ", sum([x['is_strong_binding'] for x in denovo_peptide_netmhc.values()]))
+  print("Number of peptides:", len(peptide_netmhc))
+  print("Number of peptides with weak binding: ", sum([x['is_weak_binding'] for x in peptide_netmhc.values()]))
+  print("Number of peptides with strong binding: ", sum([x['is_strong_binding'] for x in peptide_netmhc.values()]))
   print()
 
-  return denovo_peptide_netmhc
+  return peptide_netmhc
+
+
+def read_fasta(fasta_file,
+               get_uniprot_id=False,
+               get_enst_id=False,
+               get_gene_name=False):
+
+  print("read_fasta()")
+  print("fasta_file:", fasta_file)
+  print("get_uniprot_id:", get_uniprot_id)
+  print("get_enst_id:", get_enst_id)
+  print("get_gene_name:", get_gene_name)
+
+  with open(fasta_file, 'r') as file_handle:
+    record_list = list(SeqIO.parse(file_handle, "fasta"))
+    protein_list = []
+    for record in record_list:
+      uniprot_id = ''
+      enst_id = ''
+      gene_name = ''
+      name = str(record.name)
+      if get_uniprot_id:
+        uniprot_id = name.split('|')[1]
+      if get_enst_id:
+        enst_id = name
+      if get_gene_name:
+        description_list = str(record.description).strip().split(' ')
+        gene_name_list = [x for x in description_list if 'GN=' in x]
+        if len(gene_name_list) == 1:
+          gene_name = gene_name_list[0].split('=')[1]
+      seq = str(record.seq)
+      # clean letter 'X' from the 1st position of some enst protein sequences
+      if get_enst_id and seq[0] == 'X':
+        seq = seq[1:]
+      protein_list.append({'name': name,
+                           'uniprot_id': uniprot_id,
+                           'enst_id': enst_id,
+                           'gene_name': gene_name,
+                           'seq': seq})
+
+  print("Number of protein sequences in the fasta file: ", len(protein_list))
+  print()
+
+  return protein_list
+
+
+def read_db_peptide(labeled_feature_file):
+
+  print("read_db_peptide()")
+  print("labeled_feature_file:", labeled_feature_file)
+
+  db_peptide_set = set()
+  with open(labeled_feature_file, 'r') as input_handle:
+    csv_reader = csv.DictReader(input_handle, delimiter=',')
+    for row in csv_reader:
+      peptide = drop_mod_peaks(row['seq'])
+      db_peptide_set.add(peptide)
+  print("Number of db peptides identified at step 1: ", len(db_peptide_set))
+  print()
+
+  return db_peptide_set
 
 
 def hamming1_align((peptide, protein_list)):
 
+  # I and L are considered the same in this alignment
   query = peptide.replace('I', 'L')
   query_length = len(query)
   match_list = []
   for protein in protein_list:
-    subject = protein['seq_ItoL']
+    subject = protein['seq'].replace('I', 'L')
     subject_length = len(subject)
 
     # First, find candidate locations by pigeonhole principle:
@@ -215,93 +304,174 @@ def hamming1_align((peptide, protein_list)):
                       if Levenshtein.hamming(query, subject[x : (x + query_length)]) == 1]
 
     if hamming1_index:
-      match_list += [{'protein': protein['name'],
-                      'wildtype': protein['seq'][x : (x + len(peptide))]}
-                     for x in hamming1_index]
+      match_list += [{'protein': protein, 'protein_index': index}
+                      for index in hamming1_index]
 
   return peptide, match_list
 
 
-def find_denovo_mutation(denovo_peptide_list, db_fasta_file, labeled_feature_file):
+def find_mutation(peptide_list, protein_list):
 
-  print("find_denovo_mutation()")
-  print("db_fasta_file:", db_fasta_file)
-  print("labeled_feature_file:", labeled_feature_file)
+  print("find_mutation()")
 
-  print("Number of denovo peptides: ", len(denovo_peptide_list))
-
-  with open(db_fasta_file, 'r') as input_fasta_handle:
-    record_list = list(SeqIO.parse(input_fasta_handle, "fasta"))
-    print("Number of protein sequences in the database: ", len(record_list))
-  protein_list = [{'name': str(record.name), 
-                   'seq': str(record.seq),
-                   'seq_ItoL': str(record.seq).replace('I', 'L')}
-                  for record in record_list]
-
-  db_peptide_set = set()
-  with open(labeled_feature_file, 'r') as input_handle:
-    csv_reader = csv.DictReader(input_handle, delimiter=',')
-    for row in csv_reader:
-      peptide = drop_mod_peaks(row['seq'])
-      db_peptide_set.add(peptide)
-  print("Number of db peptides identified at step 1: ", len(db_peptide_set))
-
-  print("Align denovo peptides against protein sequences with 1 mismatch ...")
+  print("Align peptides against protein sequences with 1 mismatch ...")
+  print("Number of peptides: ", len(peptide_list))
+  print("Number of protein sequences:", len(protein_list))
+  print("I and L are considered the same in this alignment")
   start_time = time.time()
   pool = multiprocessing.Pool(processes=num_processes)
-  search_list = [(peptide, protein_list) for peptide in denovo_peptide_list]
+  search_list = [(peptide, protein_list) for peptide in peptide_list]
   result_list = pool.map(hamming1_align, search_list)
   print(time.time() - start_time, "seconds")
+  print()
 
-  print("Annotate denovo mutations and their wildtypes ...")
-  denovo_peptide_mutation = {}
+  peptide_mutation = {}
   for peptide, match_list in result_list:
     missense_list = []
+    peptide_length = len(peptide)
     peptide_ItoL = peptide.replace('I', 'L')
     for match in match_list:
-      wildtype = match['wildtype']
+      protein = match['protein']
+      protein_index = match['protein_index']
+      wildtype = protein['seq'][protein_index : (protein_index + peptide_length)]
       wildtype_ItoL = wildtype.replace('I', 'L')
-      assert len(peptide_ItoL) == len(wildtype_ItoL), "Error: peptide and wildtype lengths not matched"
       mutation_index = [x for x in range(len(peptide_ItoL)) if peptide_ItoL[x] != wildtype_ItoL[x]]
-      assert len(mutation_index) >= 1, "Error: more than 1 mutation found"
+      assert len(mutation_index) == 1, "Error: not 1 mutation found"
       mutation_index = mutation_index[0]
-      mutation_aa = peptide[mutation_index]
       mutation_wildtype = wildtype[mutation_index]
+      mutation_aa = peptide[mutation_index]
+      match['wildtype'] = wildtype
       match['mutation_pos'] = mutation_index + 1
-      match['mutation_aa'] = '->'.join([mutation_wildtype, mutation_aa])
+      match['mutation_wt'] = mutation_wildtype
+      match['mutation_aa'] = mutation_aa
       match['is_missense'] = int((mutation_aa, mutation_wildtype) in AA_PAIR_MISSENSE)
-      match['is_db'] = int(wildtype in db_peptide_set)
-      match['is_missense_db'] = match['is_missense'] * match['is_db']
 
     num_hits = len(match_list)
     num_missense = len([x for x in match_list if x['is_missense'] == 1])
-    num_db = len([x for x in match_list if x['is_db'] == 1])
-    num_missense_db = len([x for x in match_list if x['is_missense_db'] == 1])
-    denovo_peptide_mutation[peptide] = {'num_hits': num_hits,
-                                        'num_missense': num_missense,
-                                        'num_db': num_db,
-                                        'num_missense_db': num_missense_db,
-                                        'match_list': match_list}
+    peptide_mutation[peptide] = {'num_hits': num_hits,
+                                 'num_missense': num_missense,
+                                 'match_list': match_list}
 
   print("Number of denovo peptides with > 0 hits:",
-        len([x for x in denovo_peptide_mutation.values() if x['num_hits'] > 0]))
+        len([x for x in peptide_mutation.values() if x['num_hits'] > 0]))
   print("Number of denovo peptides with > 0 missense hits:",
-        len([x for x in denovo_peptide_mutation.values() if x['num_missense'] > 0]))
-  print("Number of denovo peptides with > 0 missense db hits:",
-        len([x for x in denovo_peptide_mutation.values() if x['num_missense_db'] > 0]))
+        len([x for x in peptide_mutation.values() if x['num_missense'] > 0]))
   print()
 
-  return denovo_peptide_mutation
+  return peptide_mutation
         
+
+def read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id):
+
+  print("read_missense_snp()")
+  print("snp_file:", snp_file)
+  print("snp_enst_fasta:", snp_enst_fasta)
+  print("snp_sample_id:", snp_sample_id)
+
+  # read SNP file
+  snp_list = []
+  with open(snp_file, 'r') as input_handle:
+    csv_reader = csv.DictReader(input_handle, delimiter=',')
+    for row in csv_reader:
+      mutation_type = row['Effect']
+      if mutation_type == 'missense_variant' and snp_sample_id == row['Sample ID']:
+        enst_id = row['ENSEMBL Transcript ID']
+        mutation_change = row['Aa change']
+        snp_list.append({'enst_id': enst_id, 'mutation_change': mutation_change})
+  print("Number of SNPs:", len(snp_list))
+  print()
+
+  # cross-check snp_list and snp_enst_fasta for enst_id, location of mutated amino acid
+  # because some transcripts were removed or updated, so their SNPs are no longer correct
+  protein_list = read_fasta(snp_enst_fasta, get_enst_id=True)
+  num_not_missense = 0
+  num_protein_confirmed = 0
+  snp_confirmed_list = []
+  for snp in snp_list:
+    # example: Pro575Leu; note that the location is 1-based, not 0-based
+    aa_3letter_ref = snp['mutation_change'][:3]
+    aa_loc = int(snp['mutation_change'][3:-3])
+    aa_3letter_alt = snp['mutation_change'][-3:]
+    aa_ref = AA_3_to_1[aa_3letter_ref]
+    aa_alt = AA_3_to_1[aa_3letter_alt]
+    if (aa_ref, aa_alt) not in AA_PAIR_MISSENSE:
+      num_not_missense += 1
+    protein_confirmed = False
+    for protein in protein_list:
+      if protein['enst_id'] == snp['enst_id']:
+        num_protein_confirmed += 1
+        if aa_loc-1 < len(protein['seq']) and aa_ref == protein['seq'][aa_loc-1]:
+          snp_confirmed_list.append({'enst_id':snp['enst_id'],
+                                     'aa_loc': aa_loc,
+                                     'aa_ref': aa_ref,
+                                     'aa_alt': aa_alt})
+
+  print("len(snp_list):", len(snp_list))
+  print("Warning: num_not_missense", num_not_missense)
+  print("num_protein_confirmed:", num_protein_confirmed)
+  print("len(snp_confirmed_list):", len(snp_confirmed_list))
+  print()
+
+  return snp_confirmed_list, protein_list
+
+
+def match_peptide_snp(peptide_list, snp_file, snp_enst_fasta, snp_sample_id):
+
+  print('match_peptide_snp()')
+
+  snp_list, protein_list = read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id)
+  peptide_mutation = find_mutation(peptide_list, protein_list)
+  peptide_snp = {}
+  for peptide, mutation in peptide_mutation.iteritems():
+    peptide_snp[peptide] = {'snp_list': []}
+    if mutation['num_hits'] > 0:
+      for match in mutation['match_list']:
+        enst_id = match['protein']['enst_id']
+        protein_index = match['protein_index']
+        for snp in snp_list:
+          if (enst_id == snp['enst_id']
+              and protein_index + match['mutation_pos'] == snp['aa_loc']
+              and match['mutation_wt'] == snp['aa_ref']
+              and match['mutation_aa'].replace('I', 'L') == snp['aa_alt'].replace('I', 'L')):
+            match_snp = snp
+            match_snp.update({'wildtype': match['wildtype']})
+            peptide_snp[peptide]['snp_list'].append(match_snp)
+
+  num_peptide_snp = len([x for x in peptide_snp.values() if x['snp_list']])
+  print('Number of peptide mutations match to SNPs:', num_peptide_snp)
+  for peptide in peptide_snp:
+    if peptide_snp[peptide]['snp_list']:
+      print(peptide, peptide_snp[peptide]['snp_list'])
+  print()
+
+  return peptide_snp
+
 
 if __name__ == '__main__':
 
-  denovo_peptide_psm = read_denovo_psm(psm_file)
-  denovo_peptide_netmhc = read_denovo_netmhc(netmhc_file)
-  denovo_peptide_list = denovo_peptide_psm.keys()
-  denovo_peptide_mutation = find_denovo_mutation(denovo_peptide_list,
-                                                 db_fasta_file,
-                                                 labeled_feature_file)
+  denovo_psm = read_denovo_psm(psm_file)
+  denovo_netmhc = read_netmhc(netmhc_file)
+  denovo_peptide_list = denovo_psm.keys()
+
+  print("Find denovo mutations with respect to the reference fasta:")
+  protein_list = read_fasta(reference_fasta_file)
+  denovo_mutation = find_mutation(denovo_peptide_list, protein_list)
+
+  print("Find wildtypes in identified db peptides")
+  db_peptide_set = read_db_peptide(labeled_feature_file)
+  for peptide in denovo_mutation:
+    num_db = 0
+    for match in denovo_mutation[peptide]['match_list']:
+      match['is_db'] = int(match['wildtype'] in db_peptide_set)
+      num_db += match['is_db']
+    denovo_mutation[peptide]['num_db'] = num_db
+  print("Number of denovo peptides with > 0 wildtype hits:",
+        len([x for x in denovo_mutation.values() if x['num_db'] > 0]))
+  print()
+
+  print("Find denovo mutations match to SNPs:")
+  denovo_snp = match_peptide_snp(denovo_peptide_list, snp_file, snp_enst_fasta, snp_sample_id)
+  print(abc)
 
   print("Write neoantigen criteria:")
   print("output_neoantigen_criteria:", output_neoantigen_criteria)
@@ -318,15 +488,18 @@ if __name__ == '__main__':
                   'num_hits',
                   'num_missense',
                   'num_db',
-                  'num_missense_db',
-                  'match_list']
+                  'match_list',
+                  'snp_list']
     csv_writer = csv.DictWriter(output_handle, fieldnames=fieldnames, delimiter=',')
     csv_writer.writeheader()
     for peptide in denovo_peptide_list:
       row = {'peptide': peptide}
-      row.update(denovo_peptide_psm[peptide])
-      row.update(denovo_peptide_netmhc[peptide])
-      row.update(denovo_peptide_mutation[peptide])
+      row.update(denovo_psm[peptide])
+      row.update(denovo_netmhc[peptide])
+      row.update(denovo_mutation[peptide])
+      row.update(denovo_snp[peptide])
+      for match in row['match_list']:
+        match['protein'] = match['protein']['name']
       csv_writer.writerow(row)
 
 

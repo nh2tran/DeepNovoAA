@@ -5,10 +5,10 @@ from Bio.SeqIO import FastaIO
 
 # remove denovo peptides that exist in the database fasta file
 # combine db and denovo into a peptide list file for PEAKS X DB search round 2
-denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
+denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
 db_fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
-labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
-peptide_list_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15/step_4.peptide_list.fasta"
+labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
+peptide_list_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_4.peptide_list.fasta"
 
 
 def drop_mod(peptide):

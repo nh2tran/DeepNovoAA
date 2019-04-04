@@ -166,7 +166,7 @@ def split_feature_training_noshare(input_feature_file, proportion):
   print("num_valid =", num_valid)
   print("num_test =", num_test)
 
-# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected"
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected"
 # ~ proportion = [0.90, 0.05, 0.05]
 # ~ split_feature_training_noshare(input_feature_file, proportion)
 
@@ -227,9 +227,9 @@ def parse_sequence_with_mod(raw_sequence):
 # calculate ppm of precursor_mz against peptide_mz
 # ppm / 1e6 = (precursor_mz - peptide_mz) / peptide_mz 
 def calculate_mass_shift_ppm(input_feature_file):
-  #print("calculate_mass_shift_ppm()")
+  print("calculate_mass_shift_ppm()")
 
-  #print("input_feature_file = ", input_feature_file)
+  print("input_feature_file = ", input_feature_file)
 
   precursor_ppm_list = []
   csv_reader = csv.DictReader(open(input_feature_file))
@@ -243,10 +243,10 @@ def calculate_mass_shift_ppm(input_feature_file):
     precursor_ppm_list.append(precursor_ppm)
   mean_precursor_ppm = np.mean(precursor_ppm_list)
 
-  #print("mean_precursor_ppm =", mean_precursor_ppm)
+  print("mean_precursor_ppm =", mean_precursor_ppm)
   return mean_precursor_ppm
 
-# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.test.noshare"
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
 # ~ print("ppm =", calculate_mass_shift_ppm(input_feature_file))
 
 
@@ -270,9 +270,11 @@ def correct_mass_shift_ppm(input_feature_file, ppm):
     row['m/z'] = corrected_mz
     csv_writer.writerow(row)
 
-# ~ labeled_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled"
+# ~ labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
 # ~ ppm = calculate_mass_shift_ppm(labeled_feature_file)
-# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.unlabeled"
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
+# ~ correct_mass_shift_ppm(input_feature_file, ppm)
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv"
 # ~ correct_mass_shift_ppm(input_feature_file, ppm)
 
 
@@ -314,7 +316,7 @@ def split_feature_unlabel(input_feature_file):
   print("num_labeled =", num_labeled)
   print("num_unlabeled =", num_unlabeled)
 
-# ~ input_feature_file = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv"
+# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv"
 # ~ split_feature_unlabel(input_feature_file)
 
 
@@ -339,8 +341,8 @@ def merge_mgf_file(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-# ~ folder_path = "data.training/aa.hla.celine.science_2018/human_lc2/"
-# ~ fraction_list = range(0, 1+1)
+# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/"
+# ~ fraction_list = range(0, 7+1)
 # ~ merge_mgf_file(
     # ~ input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
     # ~ fraction_list=fraction_list,
@@ -376,8 +378,8 @@ def merge_feature_file(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-# ~ folder_path = "data.training/aa.hla.celine.science_2018/human_lc2/"
-# ~ fraction_list = range(0, 1+1)
+# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/"
+# ~ fraction_list = range(0, 7+1)
 # ~ merge_feature_file(
     # ~ input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
     # ~ fraction_list=fraction_list,

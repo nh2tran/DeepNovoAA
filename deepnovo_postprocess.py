@@ -108,10 +108,9 @@ def select_top_score(input_file, output_file, score_cutoff):
   print('select_feature = ', select_feature)
           
 # ~ accuracy_cutoff = 0.95
-# ~ accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
+# ~ accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
 # ~ score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
-# ~ sys.exit()
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo"
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo"
 # ~ output_file = input_file + ".top95"
 # ~ select_top_score(input_file, output_file, score_cutoff)
 
@@ -137,7 +136,7 @@ def convert_I_to_L(input_file, output_file):
         row['predicted_sequence'] = predicted_sequence.replace('I', 'L')
         csv_writer.writerow(row)
           
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo"
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95"
 # ~ output_file = input_file + ".I_to_L"
 # ~ convert_I_to_L(input_file, output_file)
 
@@ -249,7 +248,7 @@ def correct_by_consensus(input_file, output_file):
       print('empty_feature = ', empty_feature)
       print('assigned_feature = ', assigned_feature)
           
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.I_to_L"
+# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L"
 # ~ output_file = input_file + ".consensus"
 # ~ correct_by_consensus(input_file, output_file)
 
@@ -283,10 +282,10 @@ def filter_by_minlen(input_file, output_file, minlen):
   print('minlen_feature = ', minlen_feature)
   print('removed_feature = ', removed_feature)
           
-# ~ minlen = 5
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
-# ~ output_file = input_file + ".minlen" + str(minlen)
-# ~ filter_by_minlen(input_file, output_file, minlen)
+minlen = 5
+input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
+output_file = input_file + ".minlen" + str(minlen)
+filter_by_minlen(input_file, output_file, minlen)
 
 
 def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence):

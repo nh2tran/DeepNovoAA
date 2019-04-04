@@ -275,7 +275,7 @@ neighbor_size = 5 # allow up to ? spectra, including the main spectrum
 dia_window = 20.0 # the window size of MS2 scan in Dalton
 focal_loss = True
 
-batch_size = 64
+batch_size = 32
 print("batch_size ", batch_size)
 
 epoch_stop = 10
@@ -303,23 +303,23 @@ print("steps_per_checkpoint ", steps_per_checkpoint)
 knapsack_file = "knapsack.npy"
 
 # training/testing/decoding files
-input_spectrum_file_train = "data.training/aa.hla.celine.science_2018/human_lc2/spectrum.mgf"
-input_feature_file_train = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.train.noshare"
-input_spectrum_file_valid = "data.training/aa.hla.celine.science_2018/human_lc2/spectrum.mgf"
-input_feature_file_valid = "data.training/aa.hla.celine.science_2018/human_lc2/feature.csv.labeled.mass_corrected.valid.noshare"
-input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
-input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare"
+input_spectrum_file_train = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/spectrum.mgf"
+input_feature_file_train = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected.train.noshare"
+input_spectrum_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/spectrum.mgf"
+input_feature_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected.valid.noshare"
+input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/spectrum.mgf"
+input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected.test.noshare"
 
 # denovo files
-denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_15/spectrum.mgf"
-denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected"
+denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/spectrum.mgf"
+denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected"
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 
 # test accuracy
 predicted_format = "deepnovo"
-target_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected"
+target_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected"
 # ~ predicted_file = denovo_output_file
-predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
+predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"
 accuracy_file = predicted_file + ".accuracy"
 denovo_only_file = predicted_file + ".denovo_only"
 scan2fea_file = predicted_file + ".scan2fea"

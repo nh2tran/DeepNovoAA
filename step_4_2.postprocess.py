@@ -2,8 +2,8 @@ import csv
 
 
 # extract denovo peptides from the PSMs of PEAKS X DB search round_2
-psm_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_4.DB search psm round_2_FDR_1%.csv"
-output_denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_4.output_peptide_list"
+psm_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_4.DB search psm round_2_FDR_1%.csv"
+output_denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_4.output_peptide_list"
 
 
 def drop_mod_peaks(peptide):

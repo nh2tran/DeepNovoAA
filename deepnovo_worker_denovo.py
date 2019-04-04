@@ -109,6 +109,8 @@ class WorkerDenovo(object):
       print("Read {0:d}/{1:d} batches".format(index + 1,
                                               worker_io.feature_index_batch_count))
       spectrum_batch = worker_io.get_spectrum(feature_index_batch)
+      if not spectrum_batch:
+        continue
       predicted_batch = self._search_denovo_batch(spectrum_batch, model, session)
       predicted_denovo_list += predicted_batch
       worker_io.write_prediction(predicted_batch)

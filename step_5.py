@@ -248,9 +248,6 @@ def read_fasta(fasta_file,
         if len(gene_name_list) == 1:
           gene_name = gene_name_list[0].split('=')[1]
       seq = str(record.seq)
-      # clean letter 'X' from the 1st position of some enst protein sequences
-      if get_enst_id and seq[0] == 'X':
-        seq = seq[1:]
       protein_list.append({'name': name,
                            'uniprot_id': uniprot_id,
                            'enst_id': enst_id,
@@ -384,6 +381,10 @@ def read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id):
   # cross-check snp_list and snp_enst_fasta for enst_id, location of mutated amino acid
   # because some transcripts were removed or updated, so their SNPs are no longer correct
   protein_list = read_fasta(snp_enst_fasta, get_enst_id=True)
+  # clean letter 'X' from the 1st position of some enst protein sequences
+  for protein in protein_list:
+    if protein['seq'][0] == 'X':
+      protein['seq'] = protein['seq'][1:]
   num_not_missense = 0
   num_protein_confirmed = 0
   snp_confirmed_list = []

@@ -13,16 +13,16 @@ import time
 
 
 # I/O files 
-psm_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_4.DB search psm round_2_FDR_1%.csv"
-netmhc_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_5.denovo_peptide.NetMHCpan.xls.csv"
+psm_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_4.DB search psm round_2_FDR_1%.csv"
+netmhc_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.denovo_peptide.NetMHCpan.xls.csv"
 WEAK_BINDING = 2.0 # NetMHC weak binding rank
 STRONG_BINDING = 0.5 # NetMHC strong binding rank
 reference_fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
-labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
-snp_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/supp_data5_snp.csv"
-snp_enst_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/supp_data5_snp.enst.fasta"
+labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
+snp_file = "data.training/aa.hla.bassani.nature_2016.mel_15/supp_data5_snp.csv"
+snp_enst_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15/supp_data5_snp.enst.fasta"
 snp_sample_id = 'MM15'
-output_neoantigen_criteria = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_5.output_neoantigen_criteria.csv"
+output_neoantigen_criteria = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.output_neoantigen_criteria.csv"
 output_protein_mutation = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.protein_mutation.csv"
 
 
@@ -466,7 +466,7 @@ def match_peptide_snp(peptide_list, snp_file, snp_enst_fasta, snp_sample_id):
 if __name__ == '__main__':
 
   denovo_psm = read_denovo_psm(psm_file)
-  # ~ denovo_netmhc = read_netmhc(netmhc_file)
+  denovo_netmhc = read_netmhc(netmhc_file)
   denovo_peptide_list = denovo_psm.keys()
 
   print("Find denovo mutations with respect to the reference fasta:")
@@ -525,7 +525,7 @@ if __name__ == '__main__':
     for peptide in denovo_peptide_list:
       row = {'peptide': peptide}
       row.update(denovo_psm[peptide])
-      # ~ row.update(denovo_netmhc[peptide])
+      row.update(denovo_netmhc[peptide])
       row.update(denovo_mutation[peptide])
       row.update(denovo_snp[peptide])
       for match in row['match_list']:

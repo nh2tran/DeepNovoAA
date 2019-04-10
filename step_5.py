@@ -23,6 +23,7 @@ snp_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/supp_data5_s
 snp_enst_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/supp_data5_snp.enst.fasta"
 snp_sample_id = 'MM15'
 output_neoantigen_criteria = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_5.output_neoantigen_criteria.csv"
+output_protein_mutation = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.protein_mutation.csv"
 
 
 AA_3_to_1 = {
@@ -330,8 +331,9 @@ def find_mutation(peptide_list, protein_list):
     peptide_ItoL = peptide.replace('I', 'L')
     for match in match_list:
       protein = match['protein']
-      protein_index = match['protein_index']
-      wildtype = protein['seq'][protein_index : (protein_index + peptide_length)]
+      match_index = match['match_index']
+
+      wildtype = protein['seq'][match_index : (match_index + peptide_length)]
       wildtype_ItoL = wildtype.replace('I', 'L')
       mutation_index = [x for x in range(len(peptide_ItoL)) if peptide_ItoL[x] != wildtype_ItoL[x]]
       assert len(mutation_index) == 1, "Error: not 1 mutation found"
@@ -344,6 +346,13 @@ def find_mutation(peptide_list, protein_list):
       match['mutation_aa'] = mutation_aa
       match['is_missense'] = int((mutation_aa, mutation_wildtype) in AA_PAIR_MISSENSE)
       match['is_not_flanking'] = int(match['mutation_pos'] != 1 and match['mutation_pos'] != len(peptide))
+
+      if match['is_missense'] and match['is_not_flanking']:
+        protein_mutation_entry = {'peptide': peptide, 'match_index': match['match_index']}
+        if not protein['name'] in protein_mutation:
+          protein_mutation[protein['name']] = [protein_mutation_entry]
+        else:
+          protein_mutation[protein['name']].append(protein_mutation_entry)
 
     num_hits = len(match_list)
     num_missense = len([x for x in match_list if x['is_missense'] == 1])
@@ -361,7 +370,7 @@ def find_mutation(peptide_list, protein_list):
         len([x for x in peptide_mutation.values() if x['num_not_flanking'] > 0]))
   print()
 
-  return peptide_mutation
+  return peptide_mutation, protein_mutation
         
 
 def read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id):
@@ -427,17 +436,17 @@ def match_peptide_snp(peptide_list, snp_file, snp_enst_fasta, snp_sample_id):
   print('match_peptide_snp()')
 
   snp_list, protein_list = read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id)
-  peptide_mutation = find_mutation(peptide_list, protein_list)
+  peptide_mutation, _ = find_mutation(peptide_list, protein_list)
   peptide_snp = {}
   for peptide, mutation in peptide_mutation.iteritems():
     peptide_snp[peptide] = {'snp_list': []}
     if mutation['num_hits'] > 0:
       for match in mutation['match_list']:
         enst_id = match['protein']['enst_id']
-        protein_index = match['protein_index']
+        match_index = match['match_index']
         for snp in snp_list:
           if (enst_id == snp['enst_id']
-              and protein_index + match['mutation_pos'] == snp['aa_loc']
+              and match_index + match['mutation_pos'] == snp['aa_loc']
               and match['mutation_wt'] == snp['aa_ref']
               and match['mutation_aa'].replace('I', 'L') == snp['aa_alt'].replace('I', 'L')):
             match_snp = snp
@@ -462,7 +471,20 @@ if __name__ == '__main__':
 
   print("Find denovo mutations with respect to the reference fasta:")
   protein_list = read_fasta(reference_fasta_file)
-  denovo_mutation = find_mutation(denovo_peptide_list, protein_list)
+  denovo_mutation, protein_mutation = find_mutation(denovo_peptide_list, protein_list)
+
+  print("Write protein with missense and not flanking mutations:")
+  print("output_protein_mutation:", output_protein_mutation)
+  print()
+  with open(output_protein_mutation, 'w') as output_handle:
+    fieldnames = ['protein_name', 'num_peptide', 'peptide_list']
+    csv_writer = csv.DictWriter(output_handle, fieldnames=fieldnames, delimiter=',')
+    csv_writer.writeheader()
+    for protein_name, peptide_list in protein_mutation.iteritems():
+      row = {'protein_name': protein_name,
+             'num_peptide': len(peptide_list),
+             'peptide_list': peptide_list}
+      csv_writer.writerow(row)
 
   print("Find wildtypes in identified db peptides")
   db_peptide_set = read_db_peptide(labeled_feature_file)

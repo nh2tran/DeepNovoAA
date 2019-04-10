@@ -301,7 +301,7 @@ def hamming1_align((peptide, protein_list)):
                       if Levenshtein.hamming(query, subject[x : (x + query_length)]) == 1]
 
     if hamming1_index:
-      match_list += [{'protein': protein, 'protein_index': index}
+      match_list += [{'protein': protein, 'match_index': index}
                       for index in hamming1_index]
 
   return peptide, match_list
@@ -323,6 +323,7 @@ def find_mutation(peptide_list, protein_list):
   print()
 
   peptide_mutation = {}
+  protein_mutation = {}
   for peptide, match_list in result_list:
     missense_list = []
     peptide_length = len(peptide)
@@ -342,17 +343,22 @@ def find_mutation(peptide_list, protein_list):
       match['mutation_wt'] = mutation_wildtype
       match['mutation_aa'] = mutation_aa
       match['is_missense'] = int((mutation_aa, mutation_wildtype) in AA_PAIR_MISSENSE)
+      match['is_not_flanking'] = int(match['mutation_pos'] != 1 and match['mutation_pos'] != len(peptide))
 
     num_hits = len(match_list)
     num_missense = len([x for x in match_list if x['is_missense'] == 1])
+    num_not_flanking = len([x for x in match_list if x['is_not_flanking'] == 1])
     peptide_mutation[peptide] = {'num_hits': num_hits,
                                  'num_missense': num_missense,
+                                 'num_not_flanking': num_not_flanking,
                                  'match_list': match_list}
 
   print("Number of denovo peptides with > 0 hits:",
         len([x for x in peptide_mutation.values() if x['num_hits'] > 0]))
   print("Number of denovo peptides with > 0 missense hits:",
         len([x for x in peptide_mutation.values() if x['num_missense'] > 0]))
+  print("Number of denovo peptides with > 0 not flanking hits:",
+        len([x for x in peptide_mutation.values() if x['num_not_flanking'] > 0]))
   print()
 
   return peptide_mutation
@@ -488,6 +494,7 @@ if __name__ == '__main__':
                   'is_strong_binding',
                   'num_hits',
                   'num_missense',
+                  'num_not_flanking',
                   'num_db',
                   'match_list',
                   'snp_list']

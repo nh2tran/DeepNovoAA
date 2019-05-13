@@ -97,6 +97,15 @@ def split_feature_training(input_feature_file, proportion):
 # randomly split a feature file into train/valid/test files for training
 # train/valid/test do NOT SHARE PEPTIDES
 def split_feature_training_noshare(input_feature_file, proportion):
+  """Randomly split a feature file into train/valid/test files for training.
+     train/valid/test do NOT SHARE PEPTIDES.
+
+     Usage:
+       input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected"
+       proportion = [0.90, 0.05, 0.05]
+       split_feature_training_noshare(input_feature_file, proportion)
+  """
+
   print("split_feature_training_noshare()")
 
   print("input_feature_file = ", input_feature_file)
@@ -166,10 +175,6 @@ def split_feature_training_noshare(input_feature_file, proportion):
   print("num_valid =", num_valid)
   print("num_test =", num_test)
 
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected"
-# ~ proportion = [0.90, 0.05, 0.05]
-# ~ split_feature_training_noshare(input_feature_file, proportion)
-
 
 # calculate peptide mass = N-terminus + amino acids + C-terminus
 def compute_peptide_mass(peptide):
@@ -227,6 +232,14 @@ def parse_sequence_with_mod(raw_sequence):
 # calculate ppm of precursor_mz against peptide_mz
 # ppm / 1e6 = (precursor_mz - peptide_mz) / peptide_mz 
 def calculate_mass_shift_ppm(input_feature_file):
+  """Calculate ppm of precursor_mz against peptide_mz.
+     ppm / 1e6 = (precursor_mz - peptide_mz) / peptide_mz
+
+     Usage:
+       input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled"
+       ppm = calculate_mass_shift_ppm(input_feature_file)
+  """
+
   print("calculate_mass_shift_ppm()")
 
   print("input_feature_file = ", input_feature_file)
@@ -246,13 +259,17 @@ def calculate_mass_shift_ppm(input_feature_file):
   print("mean_precursor_ppm =", mean_precursor_ppm)
   return mean_precursor_ppm
 
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
-# ~ print("ppm =", calculate_mass_shift_ppm(input_feature_file))
-
 
 # correct precursor_mz given ppm
 # corrected_mz = precursor_mz / (1 + ppm / 1e6)
 def correct_mass_shift_ppm(input_feature_file, ppm):
+  """Correct precursor_mz given ppm: corrected_mz = precursor_mz / (1 + ppm / 1e6).
+
+     Usage:
+       input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv"
+       correct_mass_shift_ppm(input_feature_file, ppm)
+  """
+
   print("correct_mass_shift_ppm()")
 
   print("input_feature_file = ", input_feature_file)
@@ -270,17 +287,15 @@ def correct_mass_shift_ppm(input_feature_file, ppm):
     row['m/z'] = corrected_mz
     csv_writer.writerow(row)
 
-# ~ labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
-# ~ ppm = calculate_mass_shift_ppm(labeled_feature_file)
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
-# ~ correct_mass_shift_ppm(input_feature_file, ppm)
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv"
-# ~ correct_mass_shift_ppm(input_feature_file, ppm)
-
 
 # split a feature file into labeled and unlabeled files
 def split_feature_unlabel(input_feature_file):
-  """TODO(nh2tran): docstring."""
+  """Split a feature file into labeled and unlabeled files.
+
+     Usage:
+       input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv"
+       split_feature_unlabel(input_feature_file)
+  """
 
   print(''.join(['='] * 80)) # section-separating line
   print("split_feature_unlabel()")
@@ -316,12 +331,20 @@ def split_feature_unlabel(input_feature_file):
   print("num_labeled =", num_labeled)
   print("num_unlabeled =", num_unlabeled)
 
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv"
-# ~ split_feature_unlabel(input_feature_file)
-
 
 # merge multiple mgf files into one, adding fraction ID to scan ID
 def merge_mgf_file(input_file_list, fraction_list, output_file):
+  """Merge multiple mgf files into one, adding fraction ID to scan ID.
+
+     Usage:
+       folder_path = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/"
+       fraction_list = range(0, 10+1)
+       merge_mgf_file(
+           input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
+           fraction_list=fraction_list,
+           output_file=folder_path + "spectrum.mgf")
+  """
+
   print("merge_mgf_file()")
   
   # iterate over mgf files and their lines
@@ -341,16 +364,20 @@ def merge_mgf_file(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/"
-# ~ fraction_list = range(0, 7+1)
-# ~ merge_mgf_file(
-    # ~ input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
-    # ~ fraction_list=fraction_list,
-    # ~ output_file=folder_path + "spectrum.mgf")
-
 
 # merge multiple feature files into one, adding fraction ID to feature & scan ID
 def merge_feature_file(input_file_list, fraction_list, output_file):
+  """Merge multiple feature files into one, adding fraction ID to feature & scan ID.
+
+     Usage:
+       folder_path = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/"
+       fraction_list = range(0, 10+1)
+       merge_feature_file(
+           input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
+           fraction_list=fraction_list,
+           output_file=folder_path + "feature.csv")
+  """
+
   print("merge_feature_file()")
   
   # read and write header line
@@ -378,10 +405,4 @@ def merge_feature_file(input_file_list, fraction_list, output_file):
   print("output_file = {0:s}".format(output_file))
   print("counter = {0:d}".format(counter))
 
-# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/"
-# ~ fraction_list = range(0, 7+1)
-# ~ merge_feature_file(
-    # ~ input_file_list=[folder_path + "export_" + str(i) + ".csv" for i in fraction_list],
-    # ~ fraction_list=fraction_list,
-    # ~ output_file=folder_path + "feature.csv")
 

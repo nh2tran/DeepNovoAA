@@ -82,7 +82,17 @@ def find_score_cutoff(accuracy_file, accuracy_cutoff):
 
 
 def select_top_score(input_file, output_file, score_cutoff):
-  """TODO(nh2tran): docstring."""
+  """Select a threshold of de novo confidence scores to filter de novo results.
+     The score threshold is calculated based on a 95% cutoff of the testing accuracy.
+
+     Usage:
+       accuracy_cutoff = 0.95
+       accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
+       score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
+       input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo"
+       output_file = input_file + ".top95"
+       select_top_score(input_file, output_file, score_cutoff)
+  """
 
   print("".join(["="] * 80)) # section-separating line
   print("select_top_score()")
@@ -107,16 +117,15 @@ def select_top_score(input_file, output_file, score_cutoff):
   print('total_feature = ', total_feature)
   print('select_feature = ', select_feature)
           
-# ~ accuracy_cutoff = 0.95
-# ~ accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
-# ~ score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo"
-# ~ output_file = input_file + ".top95"
-# ~ select_top_score(input_file, output_file, score_cutoff)
-
 
 def convert_I_to_L(input_file, output_file):
-  """TODO(nh2tran): docstring."""
+  """Convert I (Isoleucine) to L (Leucine).
+
+     Usage:
+       input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95"
+       output_file = input_file + ".I_to_L"
+       convert_I_to_L(input_file, output_file)
+  """
 
   print("".join(["="] * 80)) # section-separating line
   print("convert_I_to_L()")
@@ -136,10 +145,6 @@ def convert_I_to_L(input_file, output_file):
         row['predicted_sequence'] = predicted_sequence.replace('I', 'L')
         csv_writer.writerow(row)
           
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95"
-# ~ output_file = input_file + ".I_to_L"
-# ~ convert_I_to_L(input_file, output_file)
-
 
 def compute_distance(predicted_sequence, consensus_sequence):
   """TODO(nh2tran): docstring.
@@ -162,11 +167,17 @@ def compute_distance(predicted_sequence, consensus_sequence):
   return Levenshtein.distance(predicted_sequence, consensus_sequence)
 
 
-# group predicted sequences of the same mass together
-# vote the consensus sequence
-# replace the predicted by the consensus to correct errors: AB-BA, Q-AG, N-GG, etc.
 def correct_by_consensus(input_file, output_file):
-  """TODO(nh2tran): docstring."""
+  """Correct de novo sequencing errors as following:
+       group predicted sequences of the same mass together;
+       vote the consensus sequence;
+       replace the predicted by the consensus to correct errors: AB-BA, Q-AG, N-GG, etc.
+  
+     Usage:
+       input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L"
+       output_file = input_file + ".consensus"
+       correct_by_consensus(input_file, output_file)
+  """
 
   print("".join(["="] * 80)) # section-separating line
   print("correct_by_consensus()")
@@ -248,13 +259,16 @@ def correct_by_consensus(input_file, output_file):
       print('empty_feature = ', empty_feature)
       print('assigned_feature = ', assigned_feature)
           
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L"
-# ~ output_file = input_file + ".consensus"
-# ~ correct_by_consensus(input_file, output_file)
-
 
 def filter_by_minlen(input_file, output_file, minlen):
-  """TODO(nh2tran): docstring."""
+  """Filter out sequences of length less than minlen.
+  
+     Usage:
+       minlen = 5
+       input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
+       output_file = input_file + ".minlen" + str(minlen)
+       filter_by_minlen(input_file, output_file, minlen)
+  """
 
   print("".join(["="] * 80)) # section-separating line
   print("filter_by_minlen()")
@@ -282,11 +296,6 @@ def filter_by_minlen(input_file, output_file, minlen):
   print('minlen_feature = ', minlen_feature)
   print('removed_feature = ', removed_feature)
           
-minlen = 5
-input_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
-output_file = input_file + ".minlen" + str(minlen)
-filter_by_minlen(input_file, output_file, minlen)
-
 
 def database_lookup(input_fasta_file, input_denovo_file, output_file, split_char, col_sequence):
 

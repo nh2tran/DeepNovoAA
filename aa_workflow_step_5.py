@@ -12,19 +12,8 @@ num_processes = 8
 import time
 
 
-# I/O files 
-psm_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_4.DB search psm round_2_FDR_1%.csv"
-netmhc_file = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.denovo_peptide.NetMHCpan.xls.csv"
 WEAK_BINDING = 2.0 # NetMHC weak binding rank
 STRONG_BINDING = 0.5 # NetMHC strong binding rank
-reference_fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
-labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled"
-snp_file = "data.training/aa.hla.bassani.nature_2016.mel_15/supp_data5_snp.csv"
-snp_enst_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15/supp_data5_snp.enst.fasta"
-snp_sample_id = 'MM15'
-output_neoantigen_criteria = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.output_neoantigen_criteria.csv"
-output_protein_mutation = "data.training/aa.hla.bassani.nature_2016.mel_15/step_5.protein_mutation.csv"
-
 
 AA_3_to_1 = {
   'Ala':'A',
@@ -463,14 +452,22 @@ def match_peptide_snp(peptide_list, snp_file, snp_enst_fasta, snp_sample_id):
   return peptide_snp
 
 
-if __name__ == '__main__':
+def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
+           snp_file, snp_enst_fasta, snp_sample_id,
+           output_neoantigen_criteria, output_protein_mutation):
+
+  print("".join(["="] * 80)) # section-separating line
+  print("step_5()")
 
   denovo_psm = read_denovo_psm(psm_file)
-  denovo_netmhc = read_netmhc(netmhc_file)
+  if netmhc_file:
+    denovo_netmhc = read_netmhc(netmhc_file)
+  else:
+    denovo_netmhc = None
   denovo_peptide_list = denovo_psm.keys()
 
   print("Find denovo mutations with respect to the reference fasta:")
-  protein_list = read_fasta(reference_fasta_file)
+  protein_list = read_fasta(db_fasta_file)
   denovo_mutation, protein_mutation = find_mutation(denovo_peptide_list, protein_list)
 
   print("Write protein with missense and not flanking mutations:")
@@ -525,7 +522,8 @@ if __name__ == '__main__':
     for peptide in denovo_peptide_list:
       row = {'peptide': peptide}
       row.update(denovo_psm[peptide])
-      row.update(denovo_netmhc[peptide])
+      if denovo_netmhc is not None:
+        row.update(denovo_netmhc[peptide])
       row.update(denovo_mutation[peptide])
       row.update(denovo_snp[peptide])
       for match in row['match_list']:

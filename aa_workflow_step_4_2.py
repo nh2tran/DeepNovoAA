@@ -1,14 +1,10 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import csv
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
-
-
-# remove denovo peptides that exist in the database fasta file
-# combine db and denovo into a peptide list file for PEAKS X DB search round 2
-denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
-db_fasta_file = "data/uniprot_sprot.human.plus_contaminants.fasta"
-labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/feature.csv.labeled"
-peptide_list_fasta = "data.training/aa.hla.bassani.nature_2016.mel_15.class_2/step_4.peptide_list.fasta"
 
 
 def drop_mod(peptide):
@@ -29,7 +25,24 @@ def change_I_to_L(string):
     return string.replace('I', 'L')
 
 
-if __name__ == '__main__':
+def step_4_2(denovo_file, db_fasta_file, labeled_feature_file, peptide_list_fasta):
+  """Remove denovo peptides that exist in the database fasta file.
+     Combine db and denovo into a peptide list file for PEAKS X DB search round 2.
+
+     Usage:
+       denovo_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only"
+       db_fasta_file = "data.fasta/uniprot_sprot.human.plus_contaminants.fasta"
+       labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled"
+       peptide_list_fasta = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_4.peptide_list.fasta"
+  """
+
+  print("".join(["="] * 80)) # section-separating line
+  print("step_4_2()")
+
+  print("denovo_file =", denovo_file)
+  print("db_fasta_file =", db_fasta_file)
+  print("labeled_feature_file =", labeled_feature_file)
+  print("peptide_list_fasta =", peptide_list_fasta)
 
   denovo_peptide_set = set()
   with open(denovo_file, 'r') as fr:

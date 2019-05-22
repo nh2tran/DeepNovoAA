@@ -98,6 +98,40 @@ tf.app.flags.DEFINE_integer("multiprocessor",
                             1,
                             "Use multi processors to read data during training.")
 
+
+# I/O arguments
+tf.app.flags.DEFINE_string("train_spectrum",
+                           "train_spectrum",
+                           "Spectrum mgf file to train a new model.")
+tf.app.flags.DEFINE_string("train_feature",
+                           "train_feature",
+                           "Feature csv file to train a new model.")
+tf.app.flags.DEFINE_string("valid_spectrum",
+                           "valid_spectrum",
+                           "Spectrum mgf file for validation during training.")
+tf.app.flags.DEFINE_string("valid_feature",
+                           "valid_feature",
+                           "Feature csv file for validation during training.")
+tf.app.flags.DEFINE_string("test_spectrum",
+                           "test_spectrum",
+                           "Spectrum mgf file for testing.")
+tf.app.flags.DEFINE_string("test_feature",
+                           "test_feature",
+                           "Feature csv file for testing.")
+tf.app.flags.DEFINE_string("denovo_spectrum",
+                           "denovo_spectrum",
+                           "Spectrum mgf file to perform de novo sequencing.")
+tf.app.flags.DEFINE_string("denovo_feature",
+                           "denovo_feature",
+                           "Feature csv file to perform de novo sequencing.")
+tf.app.flags.DEFINE_string("target_file",
+                           "target_file",
+                           "Target file to calculate the prediction accuracy.")
+tf.app.flags.DEFINE_string("predicted_file",
+                           "predicted_file",
+                           "Predicted file to calculate the prediction accuracy.")
+
+
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -303,22 +337,32 @@ print("steps_per_checkpoint ", steps_per_checkpoint)
 knapsack_file = "knapsack.npy"
 
 # training/testing/decoding files
-input_spectrum_file_train = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-input_feature_file_train = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.train.noshare"
-input_spectrum_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-input_feature_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.valid.noshare"
-input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare"
+# ~ input_spectrum_file_train = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
+# ~ input_feature_file_train = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.train.noshare"
+# ~ input_spectrum_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
+# ~ input_feature_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.valid.noshare"
+# ~ input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
+# ~ input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare"
+input_spectrum_file_train = FLAGS.train_spectrum
+input_feature_file_train = FLAGS.train_feature
+input_spectrum_file_valid = FLAGS.valid_spectrum
+input_feature_file_valid = FLAGS.valid_feature
+input_spectrum_file_test = FLAGS.test_spectrum
+input_feature_file_test = FLAGS.test_feature
 
 # denovo files
-denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected"
+# ~ denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
+# ~ denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected"
+denovo_input_spectrum_file = FLAGS.denovo_spectrum
+denovo_input_feature_file = FLAGS.denovo_feature
 denovo_output_file = denovo_input_feature_file + ".deepnovo_denovo"
 
 # test accuracy
 predicted_format = "deepnovo"
-target_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected"
-predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"
+# ~ target_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected"
+# ~ predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"
+target_file = FLAGS.target_file
+predicted_file = FLAGS.predicted_file
 accuracy_file = predicted_file + ".accuracy"
 denovo_only_file = predicted_file + ".denovo_only"
 scan2fea_file = predicted_file + ".scan2fea"

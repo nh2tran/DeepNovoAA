@@ -11,6 +11,9 @@ import aa_workflow_step_4_2_postprocess
 import aa_workflow_step_5
 
 
+data_training_dir = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/"
+data_fasta_dir = "data.fasta/"
+model_dir = "train.mel_16.class_1/" # create this empty folder at the same level as Python scripts.
 
 
 # ================================================================================
@@ -82,7 +85,7 @@ import aa_workflow_step_5
 # Step 1.2: Set FDR 1.0%.
 # ================================================================================
 
-# The corresponding number of peptide-spectrum matches (PSMs) will be about "??", the number of unique peptides is be about "??".
+# The number of MS/MS spectra is "694565", the number of peptide-spectrum matches (PSMs) is "207332", the number of peptide sequences is "26594".
 
 
 
@@ -122,7 +125,7 @@ import aa_workflow_step_5
 
 # Run merge_mgf_file() and merge_feature_file()
 # ======================= UNCOMMENT and RUN ======================================
-# ~ folder_path = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/"
+# ~ folder_path = data_training_dir
 # ~ fraction_list = range(0, 10+1)
 # ~ merge_mgf_file(
     # ~ input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
@@ -139,7 +142,7 @@ import aa_workflow_step_5
 
 # Run split_feature_unlabel()
 # ======================= UNCOMMENT and RUN ======================================
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv"
+# ~ input_feature_file = data_training_dir + "feature.csv"
 # ~ split_feature_unlabel(input_feature_file)
 # ================================================================================
 # It will split the "feature.csv" into 2 files: "feature.csv.labeled" and "feature.csv.unlabeled".
@@ -148,11 +151,11 @@ import aa_workflow_step_5
 
 # Run calculate_mass_shift_ppm() and correct_mass_shift_ppm()
 # ======================= UNCOMMENT and RUN ======================================
-# ~ labeled_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled"
+# ~ labeled_feature_file = data_training_dir + "feature.csv.labeled"
 # ~ ppm = calculate_mass_shift_ppm(labeled_feature_file)
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled"
+# ~ input_feature_file = data_training_dir + "feature.csv.labeled"
 # ~ correct_mass_shift_ppm(input_feature_file, ppm)
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv"
+# ~ input_feature_file = data_training_dir + "feature.csv"
 # ~ correct_mass_shift_ppm(input_feature_file, ppm)
 # ================================================================================
 # The mass shift is calculated from "feature.csv.labeled".
@@ -161,7 +164,7 @@ import aa_workflow_step_5
 
 # Run split_feature_training_noshare()
 # ======================= UNCOMMENT and RUN ======================================
-# ~ input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected"
+# ~ input_feature_file = data_training_dir + "feature.csv.labeled.mass_corrected"
 # ~ proportion = [0.90, 0.05, 0.05]
 # ~ split_feature_training_noshare(input_feature_file, proportion)
 # ================================================================================
@@ -181,32 +184,34 @@ import aa_workflow_step_5
 # Step 2.2: Training DeepNovo model.
 # ================================================================================
 
-# Create an empty folder "train.mel_16.hla_1" inside the same folder of Python scripts.
-
-# Specify train/valid/test files in "deepnovo_config.py" in the following lines:
-#   input_spectrum_file_train = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-#   input_feature_file_train = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.train.noshare"
-#   input_spectrum_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-#   input_feature_file_valid = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.valid.noshare"
-#   input_spectrum_file_test = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-#   input_feature_file_test = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare"
-
 # Run DeepNovo training
-# The training will stop after 10 epoch. The model with best performance on the valid set, "ckpt-16200" is saved in the model folder "train.mel_16.hla_1".
+# The training will stop after 10 epoch. The model with best performance on the valid set, "ckpt-16200" is saved in the model folder "train.mel_16.class_1".
 # ======================= UNCOMMENT and RUN ======================================
-# ~ os.system('LD_PRELOAD="/usr/lib/libtcmalloc.so" /usr/bin/time -v python deepnovo_main.py --train_dir train.mel_16.hla_1 --train')
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --train"]
+# ~ command += ["--train_dir", model_dir]
+# ~ command += ["--train_spectrum", data_training_dir + "spectrum.mgf"]
+# ~ command += ["--train_feature", data_training_dir + "feature.csv.labeled.mass_corrected.train.noshare"]
+# ~ command += ["--valid_spectrum", data_training_dir + "spectrum.mgf"]
+# ~ command += ["--valid_feature", data_training_dir + "feature.csv.labeled.mass_corrected.valid.noshare"]
+# ~ command = " ".join(command)
+# ~ print(command)
+# ~ os.system(command)
 # ================================================================================
 
-# After training, specify the following test files in "deepnovo_config.py" for testing:
-#   denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-#   denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare"
-#   target_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare"
-#   predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo"
-    
 # Run DeepNovo testing
 # ======================= UNCOMMENT and RUN ======================================
-# ~ os.system('LD_PRELOAD="/usr/lib/libtcmalloc.so" /usr/bin/time -v python deepnovo_main.py --train_dir train.mel_16.hla_1 --search_denovo')
-# ~ os.system('LD_PRELOAD="/usr/lib/libtcmalloc.so" /usr/bin/time -v python deepnovo_main.py --test')
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --search_denovo"]
+# ~ command += ["--train_dir", model_dir]
+# ~ command += ["--denovo_spectrum", data_training_dir + "spectrum.mgf"]
+# ~ command += ["--denovo_feature", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare"]
+# ~ command = " ".join(command)
+# ~ print(command)
+# ~ os.system(command)
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test"]
+# ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare"]
+# ~ command += ["--predicted_file", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo"]
+# ~ print(command)
+# ~ os.system(command)
 # ================================================================================
 # The testing accuracy at the amino acid (AA) and peptide levels will be reported as following:
 #   "precision_AA_mass_db  = 0.8425"
@@ -221,13 +226,15 @@ import aa_workflow_step_5
 
 # This step 3 took about 5 hours on a server with GPU Titan X, 32 GB memory
 
-# Specify these files in "deepnovo_config.py" to perform de novo sequencing on all features (label and unlabeled):
-#   denovo_input_spectrum_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/spectrum.mgf"
-#   denovo_input_feature_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected"
-
-# Run DeepNovo de novo sequencing
+# Run DeepNovo de novo sequencing on all features (label and unlabeled)
 # ======================= UNCOMMENT and RUN ======================================
-# ~ os.system('LD_PRELOAD="/usr/lib/libtcmalloc.so" /usr/bin/time -v python deepnovo_main.py --train_dir train.mel_16.hla_1 --search_denovo')
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --search_denovo"]
+# ~ command += ["--train_dir", model_dir]
+# ~ command += ["--denovo_spectrum", data_training_dir + "spectrum.mgf"]
+# ~ command += ["--denovo_feature", data_training_dir + "feature.csv.mass_corrected"]
+# ~ command = " ".join(command)
+# ~ print(command)
+# ~ os.system(command)
 # ================================================================================
 # The de novo results will be written to the file "feature.csv.mass_corrected.deepnovo_denovo".
 # The tool will also report the number of features that have been processed:
@@ -252,9 +259,9 @@ import aa_workflow_step_5
 # The score threshold is calculated based on a 95% cutoff of the testing accuracy obtained at the end of Step 2 above.
 # ======================= UNCOMMENT and RUN ======================================
 # ~ accuracy_cutoff = 0.95
-# ~ accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
+# ~ accuracy_file = data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
 # ~ score_cutoff = find_score_cutoff(accuracy_file, accuracy_cutoff)
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo"
+# ~ input_file = data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo"
 # ~ output_file = input_file + ".top95"
 # ~ select_top_score(input_file, output_file, score_cutoff)
 # ================================================================================
@@ -267,7 +274,7 @@ import aa_workflow_step_5
 # Run convert_I_to_L()
 # This script converts I (Isoleucine) to L (Leucine) in all de novo peptides, because de novo sequencing is not able to distinguish them.
 # ======================= UNCOMMENT and RUN ======================================
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95"
+# ~ input_file = data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95"
 # ~ output_file = input_file + ".I_to_L"
 # ~ convert_I_to_L(input_file, output_file)
 # ================================================================================
@@ -275,7 +282,7 @@ import aa_workflow_step_5
 # Run correct_by_consensus()
 # This script corrects de novo sequencing errors by grouping predicted sequences of the same mass together and voting the consensus sequence.
 # ======================= UNCOMMENT and RUN ======================================
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L"
+# ~ input_file = data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L"
 # ~ output_file = input_file + ".consensus"
 # ~ correct_by_consensus(input_file, output_file)
 # ================================================================================
@@ -284,7 +291,7 @@ import aa_workflow_step_5
 # This script filters out sequences of length less than 5 amino acids.
 # ======================= UNCOMMENT and RUN ======================================
 # ~ minlen = 5
-# ~ input_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
+# ~ input_file = data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus"
 # ~ output_file = input_file + ".minlen" + str(minlen)
 # ~ filter_by_minlen(input_file, output_file, minlen)
 # ================================================================================
@@ -295,22 +302,27 @@ import aa_workflow_step_5
 
 # Up to this step, we get the following file: 
 #   "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"
-# We test its accuracy against the test set by specifying the following in "deepnovo_config.py":
-#   target_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected.test.noshare"
-#   predicted_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"
+# We test its accuracy against the test set:
 # Run DeepNovo testing
 # ======================= UNCOMMENT and RUN ======================================
-# ~ os.system('LD_PRELOAD="/usr/lib/libtcmalloc.so" /usr/bin/time -v python deepnovo_main.py --test')
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test"]
+# ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare"]
+# ~ command += ["--predicted_file", data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"]
+# ~ print(command)
+# ~ os.system(command)
 # ================================================================================
 # We get these results:
 #   "precision_AA_mass_db  = 0.9530"
 #   "precision_peptide_mass_db  = 0.8441"
 
-# Repeat the same testing but now against all labeled features by specifying the following in "deepnovo_config.py":
-#   target_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled.mass_corrected"
+# Repeat the same testing but now against all labeled features:
 # Run DeepNovo testing
 # ====================== UNCOMMENT and RUN =======================================
-# ~ os.system('LD_PRELOAD="/usr/lib/libtcmalloc.so" /usr/bin/time -v python deepnovo_main.py --test')
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test"]
+# ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected.noshare"]
+# ~ command += ["--predicted_file", data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"]
+# ~ print(command)
+# ~ os.system(command)
 # ================================================================================
 # We get these results:
 #   "precision_AA_mass_db  = 0.9797"
@@ -332,14 +344,15 @@ import aa_workflow_step_5
 # This script will select unique de novo peptides, filter out those that belong to the human Swiss-Prot protein database, and combine the remaining de novo peptides and the database peptides identified from Step 1 into a fasta file.
 # ======================= UNCOMMENT and RUN ======================================
 # ~ aa_workflow_step_4_2.step_4_2(
-    # ~ denovo_file="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only",
-    # ~ db_fasta_file="data.fasta/uniprot_sprot.human.plus_contaminants.fasta",
-    # ~ labeled_feature_file="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled",
-    # ~ peptide_list_fasta="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_4.peptide_list.fasta")
+    # ~ denovo_file=data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only",
+    # ~ db_fasta_file=data_fasta_dir + "uniprot_sprot.human.plus_contaminants.fasta",
+    # ~ labeled_feature_file=data_training_dir + "feature.csv.labeled",
+    # ~ peptide_list_fasta=data_training_dir + "aa_workflow.step_4.peptide_list.fasta")
 # ================================================================================
 # The numbers of de novo and database peptides are reported as following:
+#   "Number of top-scoring denovo peptides: 17318"
 #   "num_db_peptides = 25274"
-#   "num_denovo_peptides = 6444"
+#   "num_denovo_peptides = 6444" (not in database)
 
 # Run PEAKS X DB search with as following:
 #   Select the DENOVO node result from Step 1.1, and select PEAKS DB search;
@@ -351,8 +364,8 @@ import aa_workflow_step_5
 # Extract de novo peptides from the PSMs of PEAKS X DB search round 2.
 # ======================= UNCOMMENT and RUN ======================================
 # ~ aa_workflow_step_4_2_postprocess.step_4_2_postprocess(
-    # ~ psm_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_4.psm.csv",
-    # ~ output_denovo_peptide_file = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_4.output_peptide_list")
+    # ~ psm_file = data_training_dir + "aa_workflow.step_4.psm.csv",
+    # ~ output_denovo_peptide_file = data_training_dir + "aa_workflow.step_4.output_peptide_list")
 # ================================================================================
 # The number of de novo peptides is reported as following:
 #   "num_denovo_peptides = 1259"
@@ -363,16 +376,16 @@ import aa_workflow_step_5
 # ================================================================================
 # Step 5: Neoantigen selection. 
 # ================================================================================
-aa_workflow_step_5.step_5(
-    psm_file="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_4.psm.csv",
-    netmhc_file=None,#"data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_5.netmhc.csv",
-    db_fasta_file="data.fasta/uniprot_sprot.human.plus_contaminants.fasta",
-    labeled_feature_file="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/feature.csv.labeled",
-    snp_file="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_5.supp_data5_snp.csv",
-    snp_enst_fasta="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_5.supp_data5_snp_enst.fasta",
-    snp_sample_id='Mel16',
-    output_neoantigen_criteria="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_5.output_neoantigen_criteria.csv",
-    output_protein_mutation="data.training/aa.hla.bassani.nature_2016.mel_16.class_1/aa_workflow.step_5.protein_mutation.csv")
+# ~ aa_workflow_step_5.step_5(
+    # ~ psm_file=data_training_dir + "aa_workflow.step_4.psm.csv",
+    # ~ netmhc_file=None,#data_training_dir + "aa_workflow.step_5.netmhc.csv",
+    # ~ db_fasta_file=data_fasta_dir + "uniprot_sprot.human.plus_contaminants.fasta",
+    # ~ labeled_feature_file=data_training_dir + "feature.csv.labeled",
+    # ~ snp_file=data_training_dir + "aa_workflow.step_5.supp_data5_snp.csv",
+    # ~ snp_enst_fasta=data_training_dir + "aa_workflow.step_5.supp_data5_snp_enst.fasta",
+    # ~ snp_sample_id='Mel16',
+    # ~ output_neoantigen_criteria=data_training_dir + "aa_workflow.step_5.output_neoantigen_criteria.csv",
+    # ~ output_protein_mutation=data_training_dir + "aa_workflow.step_5.protein_mutation.csv")
 
 
 

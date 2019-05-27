@@ -170,7 +170,6 @@ def read_denovo_psm(psm_file):
   print("Number of denovo peptides with >= 1 psm: ", len([x for x in num_psm_list if x >= 1]))
   print("Number of denovo peptides with >= 2 psm: ", len([x for x in num_psm_list if x >= 2]))
   print("Number of denovo peptides with >= 3 psm: ", len([x for x in num_psm_list if x >= 3]))
-  print("Number of denovo peptides with >= 4 psm: ", len([x for x in num_psm_list if x >= 4]))
   print()
 
   return denovo_peptide_psm
@@ -334,9 +333,10 @@ def find_mutation(peptide_list, protein_list):
       match['mutation_wt'] = mutation_wildtype
       match['mutation_aa'] = mutation_aa
       match['is_missense'] = int((mutation_aa, mutation_wildtype) in AA_PAIR_MISSENSE)
-      match['is_not_flanking'] = int(match['mutation_pos'] != 1 and match['mutation_pos'] != len(peptide))
+      not_flanking = int(match['mutation_pos'] != 1 and match['mutation_pos'] != len(peptide))
+      match['is_missense_not_flanking'] = match['is_missense'] * not_flanking
 
-      if match['is_missense'] and match['is_not_flanking']:
+      if match['is_missense_not_flanking']:
         protein_mutation_entry = {'peptide': peptide, 'match_index': match['match_index']}
         if not protein['name'] in protein_mutation:
           protein_mutation[protein['name']] = [protein_mutation_entry]
@@ -345,18 +345,18 @@ def find_mutation(peptide_list, protein_list):
 
     num_hits = len(match_list)
     num_missense = len([x for x in match_list if x['is_missense'] == 1])
-    num_not_flanking = len([x for x in match_list if x['is_not_flanking'] == 1])
+    num_missense_not_flanking = len([x for x in match_list if x['is_missense_not_flanking'] == 1])
     peptide_mutation[peptide] = {'num_hits': num_hits,
                                  'num_missense': num_missense,
-                                 'num_not_flanking': num_not_flanking,
+                                 'num_missense_not_flanking': num_missense_not_flanking,
                                  'match_list': match_list}
 
-  print("Number of denovo peptides with > 0 hits:",
-        len([x for x in peptide_mutation.values() if x['num_hits'] > 0]))
-  print("Number of denovo peptides with > 0 missense hits:",
-        len([x for x in peptide_mutation.values() if x['num_missense'] > 0]))
-  print("Number of denovo peptides with > 0 not flanking hits:",
-        len([x for x in peptide_mutation.values() if x['num_not_flanking'] > 0]))
+  print("Number of denovo peptides with >= 1 hits:",
+        len([x for x in peptide_mutation.values() if x['num_hits'] >= 1]))
+  print("Number of denovo peptides with >= 1 missense hits:",
+        len([x for x in peptide_mutation.values() if x['num_missense'] >= 1]))
+  print("Number of denovo peptides with >= 1 missense, not flanking hits:",
+        len([x for x in peptide_mutation.values() if x['num_missense_not_flanking'] >= 1]))
   print()
 
   return peptide_mutation, protein_mutation
@@ -491,8 +491,8 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
       match['is_db'] = int(match['wildtype'] in db_peptide_set)
       num_db += match['is_db']
     denovo_mutation[peptide]['num_db'] = num_db
-  print("Number of denovo peptides with > 0 wildtype hits:",
-        len([x for x in denovo_mutation.values() if x['num_db'] > 0]))
+  print("Number of denovo peptides with >= 1 wildtype hits:",
+        len([x for x in denovo_mutation.values() if x['num_db'] >= 1]))
   print()
 
   print("Find denovo mutations match to SNPs:")
@@ -513,7 +513,7 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
                   'is_strong_binding',
                   'num_hits',
                   'num_missense',
-                  'num_not_flanking',
+                  'num_missense_not_flanking',
                   'num_db',
                   'match_list',
                   'snp_list']
@@ -529,6 +529,15 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
       for match in row['match_list']:
         match['protein'] = match['protein']['name']
       csv_writer.writerow(row)
+
+  print("Selection criteria: >= 1 missense, not flanking hits AND >= 2 psm")
+  num_selection = len([peptide for peptide in denovo_peptide_list
+                       if denovo_mutation[peptide]['num_missense_not_flanking'] >= 1
+                       and denovo_psm[peptide]['num_psm'] >= 2])
+  print("num_selection :", num_selection)
+
+
+
 
 
 

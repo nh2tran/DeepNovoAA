@@ -188,8 +188,8 @@ def read_netmhc(netmhc_file):
     for row in csv_reader:
       peptide = row['Peptide']
       if peptide not in peptide_netmhc:
-        best_nM = min([float(row[x]) for x in ['nM1', 'nM2', 'nM3', 'nM4']])
-        best_rank = min([float(row[x]) for x in ['Rank1', 'Rank2', 'Rank3', 'Rank4']])
+        best_nM = min([float(row[x]) for x in ['nM1', 'nM2', 'nM3', 'nM4', 'nM5', 'nM6'] if x in csv_reader.fieldnames])
+        best_rank = min([float(row[x]) for x in ['Rank1', 'Rank2', 'Rank3', 'Rank4', 'Rank5', 'Rank6'] if x in csv_reader.fieldnames])
         is_weak_binding = int(best_rank <= WEAK_BINDING)
         is_strong_binding = int(best_rank <= STRONG_BINDING)
         peptide_netmhc[peptide] = {
@@ -528,7 +528,7 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
     for peptide in denovo_peptide_list:
       row = {'peptide': peptide}
       row.update(denovo_psm[peptide])
-      if denovo_netmhc is not None:
+      if denovo_netmhc is not None and peptide in denovo_netmhc:
         row.update(denovo_netmhc[peptide])
       row.update(denovo_mutation[peptide])
       row.update(denovo_snp[peptide])

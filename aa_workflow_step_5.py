@@ -369,7 +369,7 @@ def read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id):
   print("snp_enst_fasta:", snp_enst_fasta)
   print("snp_sample_id:", snp_sample_id)
 
-  # read SNP file
+  # read missense SNP
   snp_list = []
   with open(snp_file, 'r') as input_handle:
     csv_reader = csv.DictReader(input_handle, delimiter=',')
@@ -379,19 +379,27 @@ def read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id):
         enst_id = row['ENSEMBL Transcript ID']
         mutation_change = row['Aa change']
         snp_list.append({'enst_id': enst_id, 'mutation_change': mutation_change})
-  print("Number of SNPs:", len(snp_list))
+  print("Number of missense SNPs:", len(snp_list))
   print()
 
-  # cross-check snp_list and snp_enst_fasta for enst_id, location of mutated amino acid
-  # because some transcripts were removed or updated, so their SNPs are no longer correct
+  # read SNP Ensembl Transcript fasta
   protein_list = read_fasta(snp_enst_fasta, get_enst_id=True)
   # clean letter 'X' from the 1st position of some enst protein sequences
   for protein in protein_list:
     if protein['seq'][0] == 'X':
       protein['seq'] = protein['seq'][1:]
+  # convert protein_list to a dictionary with key as Ensembl Transcript ID
+  protein_dict = {}
+  for protein in protein_list:
+    enst_id = protein['enst_id']
+    assert enst_id not in protein_dict, "Error: duplicate enst_id"
+    protein_dict[enst_id] = protein
+
+  # cross-check snp_list and snp_enst_fasta for enst_id, location, and identity of mutated amino acid
+  # because some transcripts were removed or updated, so their SNPs are no longer correct
   num_not_missense = 0
-  num_protein_confirmed = 0
   snp_confirmed_list = []
+  enst_id_confirmed_set = set()
   for snp in snp_list:
     # example: Pro575Leu; note that the location is 1-based, not 0-based
     aa_3letter_ref = snp['mutation_change'][:3]
@@ -399,25 +407,24 @@ def read_missense_snp(snp_file, snp_enst_fasta, snp_sample_id):
     aa_3letter_alt = snp['mutation_change'][-3:]
     aa_ref = AA_3_to_1[aa_3letter_ref]
     aa_alt = AA_3_to_1[aa_3letter_alt]
-    if (aa_ref, aa_alt) not in AA_PAIR_MISSENSE:
-      num_not_missense += 1
-    protein_confirmed = False
-    for protein in protein_list:
-      if protein['enst_id'] == snp['enst_id']:
-        num_protein_confirmed += 1
-        if aa_loc-1 < len(protein['seq']) and aa_ref == protein['seq'][aa_loc-1]:
-          snp_confirmed_list.append({'enst_id':snp['enst_id'],
-                                     'aa_loc': aa_loc,
-                                     'aa_ref': aa_ref,
-                                     'aa_alt': aa_alt})
+    enst_id = snp['enst_id']
+    if enst_id in protein_dict:
+      protein = protein_dict[enst_id]
+      if aa_loc-1 < len(protein['seq']) and aa_ref == protein['seq'][aa_loc-1]:
+        snp_confirmed_list.append({'enst_id':snp['enst_id'],
+                                   'aa_loc': aa_loc,
+                                   'aa_ref': aa_ref,
+                                   'aa_alt': aa_alt})
+        enst_id_confirmed_set.add(enst_id)
+  protein_confirmed_list = [protein_dict[enst_id] for enst_id in enst_id_confirmed_set]
 
   print("len(snp_list):", len(snp_list))
-  print("Warning: num_not_missense", num_not_missense)
-  print("num_protein_confirmed:", num_protein_confirmed)
   print("len(snp_confirmed_list):", len(snp_confirmed_list))
+  print("len(protein_dict):", len(protein_dict))
+  print("len(protein_confirmed_list):", len(protein_confirmed_list))
   print()
 
-  return snp_confirmed_list, protein_list
+  return snp_confirmed_list, protein_confirmed_list
 
 
 def match_peptide_snp(peptide_list, snp_file, snp_enst_fasta, snp_sample_id):
@@ -497,7 +504,6 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
 
   print("Find denovo mutations match to SNPs:")
   denovo_snp = match_peptide_snp(denovo_peptide_list, snp_file, snp_enst_fasta, snp_sample_id)
-  print()
 
   print("Write neoantigen criteria:")
   print("output_neoantigen_criteria:", output_neoantigen_criteria)

@@ -502,8 +502,11 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
         len([x for x in denovo_mutation.values() if x['num_db'] >= 1]))
   print()
 
-  print("Find denovo mutations match to SNPs:")
-  denovo_snp = match_peptide_snp(denovo_peptide_list, snp_file, snp_enst_fasta, snp_sample_id)
+  if snp_file:
+    print("Find denovo mutations match to SNPs:")
+    denovo_snp = match_peptide_snp(denovo_peptide_list, snp_file, snp_enst_fasta, snp_sample_id)
+  else:
+    denovo_snp = None
 
   print("Write neoantigen criteria:")
   print("output_neoantigen_criteria:", output_neoantigen_criteria)
@@ -531,7 +534,8 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
       if denovo_netmhc is not None and peptide in denovo_netmhc:
         row.update(denovo_netmhc[peptide])
       row.update(denovo_mutation[peptide])
-      row.update(denovo_snp[peptide])
+      if denovo_snp is not None:
+        row.update(denovo_snp[peptide])
       for match in row['match_list']:
         match['protein'] = match['protein']['name']
       csv_writer.writerow(row)

@@ -72,7 +72,8 @@ def find_score_cutoff(accuracy_file, accuracy_cutoff):
   recall_cumsum = np.cumsum([f['recall_AA'] for f in feature_list_sorted])
   predicted_len_cumsum = np.cumsum([f['predicted_len'] for f in feature_list_sorted])
   accuracy_cumsum = recall_cumsum / predicted_len_cumsum
-  cutoff_index = np.flatnonzero(accuracy_cumsum < accuracy_cutoff)[0]
+  #cutoff_index = np.flatnonzero(accuracy_cumsum < accuracy_cutoff)[0]
+  cutoff_index = np.flatnonzero(accuracy_cumsum >= accuracy_cutoff)[-1]
   cutoff_score = feature_list_sorted[cutoff_index]['predicted_score']
   print('cutoff_index = ', cutoff_index)
   print('cutoff_score = ', cutoff_score)

@@ -7,13 +7,14 @@ import os
 from deepnovo_preprocess import *
 from deepnovo_postprocess import *
 import aa_workflow_step_4_2
-import aa_workflow_step_4_2_postprocess
 import aa_workflow_step_5
 
 
-data_training_dir = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/"
 data_fasta_dir = "data.fasta/"
-model_dir = "train.mel_16.class_1/" # create this empty folder at the same level as Python scripts.
+patient_id = None
+data_training_dir = "data.training/aa.hla.celine.science_2018.human_lc2/"
+num_fractions = 2
+model_dir = "train.human_lc2/" # create this empty folder at the same level as Python scripts.
 
 
 # ================================================================================
@@ -126,7 +127,7 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # Run merge_mgf_file() and merge_feature_file()
 # ======================= UNCOMMENT and RUN ======================================
 # ~ folder_path = data_training_dir
-# ~ fraction_list = range(0, 10+1)
+# ~ fraction_list = range(0, num_fractions)
 # ~ merge_mgf_file(
     # ~ input_file_list=[folder_path + "export_" + str(i) + ".mgf" for i in fraction_list],
     # ~ fraction_list=fraction_list,
@@ -193,6 +194,7 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # ~ command += ["--train_feature", data_training_dir + "feature.csv.labeled.mass_corrected.train.noshare"]
 # ~ command += ["--valid_spectrum", data_training_dir + "spectrum.mgf"]
 # ~ command += ["--valid_feature", data_training_dir + "feature.csv.labeled.mass_corrected.valid.noshare"]
+# ~ command += ["--reset_step"]
 # ~ command = " ".join(command)
 # ~ print(command)
 # ~ os.system(command)
@@ -200,6 +202,13 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 
 # Run DeepNovo testing
 # ======================= UNCOMMENT and RUN ======================================
+# ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test_true_feeding"]
+# ~ command += ["--train_dir", model_dir]
+# ~ command += ["--test_spectrum", data_training_dir + "spectrum.mgf"]
+# ~ command += ["--test_feature", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare"]
+# ~ command = " ".join(command)
+# ~ print(command)
+# ~ os.system(command)
 # ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --search_denovo"]
 # ~ command += ["--train_dir", model_dir]
 # ~ command += ["--denovo_spectrum", data_training_dir + "spectrum.mgf"]
@@ -210,6 +219,7 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test"]
 # ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare"]
 # ~ command += ["--predicted_file", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo"]
+# ~ command = " ".join(command)
 # ~ print(command)
 # ~ os.system(command)
 # ================================================================================
@@ -308,6 +318,7 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test"]
 # ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected.test.noshare"]
 # ~ command += ["--predicted_file", data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"]
+# ~ command = " ".join(command)
 # ~ print(command)
 # ~ os.system(command)
 # ================================================================================
@@ -319,8 +330,9 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # Run DeepNovo testing
 # ====================== UNCOMMENT and RUN =======================================
 # ~ command = ["LD_PRELOAD=\"/usr/lib/libtcmalloc.so\" /usr/bin/time -v python deepnovo_main.py --test"]
-# ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected.noshare"]
+# ~ command += ["--target_file", data_training_dir + "feature.csv.labeled.mass_corrected"]
 # ~ command += ["--predicted_file", data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5"]
+# ~ command = " ".join(command)
 # ~ print(command)
 # ~ os.system(command)
 # ================================================================================
@@ -343,10 +355,10 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # Before running PEAKS, we need to combine database and de novo peptides into a list.
 # This script will select unique de novo peptides, filter out those that belong to the human Swiss-Prot protein database, and combine the remaining de novo peptides and the database peptides identified from Step 1 into a fasta file.
 # ======================= UNCOMMENT and RUN ======================================
-# ~ aa_workflow_step_4_2.step_4_2(
+# ~ aa_workflow_step_4_2.preprocess(
     # ~ denovo_file=data_training_dir + "feature.csv.mass_corrected.deepnovo_denovo.top95.I_to_L.consensus.minlen5.denovo_only",
     # ~ db_fasta_file=data_fasta_dir + "uniprot_sprot.human.plus_contaminants.fasta",
-    # ~ labeled_feature_file=data_training_dir + "feature.csv.labeled",
+    # ~ labeled_feature_file=data_training_dir + "feature.csv.labeled.mass_corrected",
     # ~ peptide_list_fasta=data_training_dir + "aa_workflow.step_4.peptide_list.fasta")
 # ================================================================================
 # The numbers of de novo and database peptides are reported as following:
@@ -363,7 +375,7 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 
 # Extract de novo peptides from the PSMs of PEAKS X DB search round 2.
 # ======================= UNCOMMENT and RUN ======================================
-# ~ aa_workflow_step_4_2_postprocess.step_4_2_postprocess(
+# ~ aa_workflow_step_4_2.postprocess(
     # ~ psm_file = data_training_dir + "aa_workflow.step_4.psm.csv",
     # ~ output_denovo_peptide_file = data_training_dir + "aa_workflow.step_4.output_peptide_list")
 # ================================================================================
@@ -378,12 +390,12 @@ model_dir = "train.mel_16.class_1/" # create this empty folder at the same level
 # ================================================================================
 # ~ aa_workflow_step_5.step_5(
     # ~ psm_file=data_training_dir + "aa_workflow.step_4.psm.csv",
-    # ~ netmhc_file=None,#data_training_dir + "aa_workflow.step_5.netmhc.csv",
+    # ~ netmhc_file=None,#data_training_dir + "aa_workflow.step_5.netmhcpan.csv",
     # ~ db_fasta_file=data_fasta_dir + "uniprot_sprot.human.plus_contaminants.fasta",
     # ~ labeled_feature_file=data_training_dir + "feature.csv.labeled",
-    # ~ snp_file=data_training_dir + "aa_workflow.step_5.supp_data5_snp.csv",
-    # ~ snp_enst_fasta=data_training_dir + "aa_workflow.step_5.supp_data5_snp_enst.fasta",
-    # ~ snp_sample_id='Mel16',
+    # ~ snp_file=None,#data_training_dir + "aa_workflow.step_5.supp_data5_snp.csv",
+    # ~ snp_enst_fasta=None,#data_training_dir + "aa_workflow.step_5.supp_data5_snp_enst.fasta",
+    # ~ snp_sample_id=None,#patient_id,
     # ~ output_neoantigen_criteria=data_training_dir + "aa_workflow.step_5.output_neoantigen_criteria.csv",
     # ~ output_protein_mutation=data_training_dir + "aa_workflow.step_5.protein_mutation.csv")
 

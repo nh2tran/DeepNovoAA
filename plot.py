@@ -263,18 +263,22 @@ def get_accuracy_score(accuracy_file):
 # figure2.accuracy.score.png
 def draw_figure2_accuracy_score():
 
-  accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
+  accuracy_file = "data.training/aa.hla.bassani.nature_2016.mel_15.class_1/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
+  accuracy_file_generic = "data.training/aa.hla.bassani.nature_2016.mel_15.class_1/train.exclude_mel_15/feature.csv.labeled.mass_corrected.test.noshare.deepnovo_denovo.accuracy"
   x_test, y_test = get_accuracy_score(accuracy_file)
+  x_test_generic, y_test_generic = get_accuracy_score(accuracy_file_generic)
   fig, ax = pyplot.subplots()
-  plot_test, = pyplot.plot(x_test, y_test, '-o', linewidth=2.0, color='red', markeredgecolor='red', alpha=0.75)
-  plot_cutoff_y, = pyplot.plot([0, 100], [95, 95], '--', linewidth=1.0, color='red', markeredgecolor='red', alpha=0.75)
-  plot_cutoff_x, = pyplot.plot([75, 75], [0, 100], '--', linewidth=1.0, color='red', markeredgecolor='red', alpha=0.75)
-  pyplot.legend([plot_test, plot_cutoff_y], ['Score distribution', '95% cutoff'], loc='lower right')
-  pyplot.yticks([0, 20, 40, 60, 80, 95, 100], ['0', '20', '40', '60', '80', '95', '100'])
+  plot_test, = pyplot.plot(x_test, y_test, '-s', linewidth=1.0, color='red', markeredgecolor='red', alpha=0.75)
+  plot_test_generic, = pyplot.plot(x_test_generic, y_test_generic, '--o', linewidth=1.0, color='red', markeredgecolor='red', alpha=0.75)
+  plot_cutoff_y, = pyplot.plot([0, 100], [95, 95], '--', linewidth=1.0, color='black', markeredgecolor='black', alpha=0.75)
+  # ~ plot_cutoff_x, = pyplot.plot([59.5, 59.5], [0, 100], '--', linewidth=1.0, color='black', markeredgecolor='black', alpha=0.75)
+  # ~ plot_cutoff_x, = pyplot.plot([61.9, 61.9], [0, 100], '--', linewidth=1.0, color='black', markeredgecolor='black', alpha=0.75)
+  pyplot.legend([plot_test, plot_test_generic, plot_cutoff_y], ['Personalized model', 'Generic model', '95% cutoff'], loc='lower right')
+  pyplot.yticks([80, 83.5, 86.7, 90, 95, 100], ['80', '83.5', '86.7', '90', '95', '100'])
   # ~ pyplot.title('DeepNovo confidence score for quality control')
   ax.set_xlabel('De novo confidence score')
   ax.set_xlim([0, 105])
-  ax.set_ylim([0, 105])
+  ax.set_ylim([80, 101])
   ax.set_ylabel('Amino acid accuracy (%)')
   ax.spines['right'].set_visible(False)
   ax.spines['top'].set_visible(False)

@@ -248,7 +248,8 @@ def get_accuracy_score(accuracy_file):
   y_value = []
   # find the accuracy for different cutoff
   for x in x_value:
-    feature_x = [f for f in feature_list if x-(step//2) < 100*math.exp(f['predicted_score']) <= x+(step//2)]
+    # ~ feature_x = [f for f in feature_list if x-(step//2) < 100*math.exp(f['predicted_score']) <= x+(step//2)]
+    feature_x = [f for f in feature_list if x <= 100*math.exp(f['predicted_score'])]
     recall_AA = sum([f['recall_AA'] for f in feature_x])
     predicted_len = sum([f['predicted_len'] for f in feature_x])
     if predicted_len > 0:

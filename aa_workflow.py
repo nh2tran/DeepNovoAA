@@ -11,10 +11,10 @@ import aa_workflow_step_5
 
 
 data_fasta_dir = "data.fasta/"
-patient_id = None
-data_training_dir = "data.training/aa.hla.celine.science_2018.human_lc2/"
-num_fractions = 2
-model_dir = "train.human_lc2/" # create this empty folder at the same level as Python scripts.
+patient_id = "MM15"
+data_training_dir = "data.training/aa.hla.bassani.nature_2016.mel_15.class_1/train.exclude_mel_15/"
+num_fractions = 10
+model_dir = "train.mel_15.class_1" # create this empty folder at the same level as Python scripts.
 
 
 # ================================================================================
@@ -390,12 +390,12 @@ model_dir = "train.human_lc2/" # create this empty folder at the same level as P
 # ================================================================================
 # ~ aa_workflow_step_5.step_5(
     # ~ psm_file=data_training_dir + "aa_workflow.step_4.psm.csv",
-    # ~ netmhc_file=None,#data_training_dir + "aa_workflow.step_5.netmhcpan.csv",
+    # ~ netmhc_file=data_training_dir + "aa_workflow.step_5.netmhcpan.csv",
     # ~ db_fasta_file=data_fasta_dir + "uniprot_sprot.human.plus_contaminants.fasta",
     # ~ labeled_feature_file=data_training_dir + "feature.csv.labeled",
-    # ~ snp_file=None,#data_training_dir + "aa_workflow.step_5.supp_data5_snp.csv",
-    # ~ snp_enst_fasta=None,#data_training_dir + "aa_workflow.step_5.supp_data5_snp_enst.fasta",
-    # ~ snp_sample_id=None,#patient_id,
+    # ~ snp_file=data_training_dir + "aa_workflow.step_5.supp_data5_snp.csv",
+    # ~ snp_enst_fasta=data_training_dir + "aa_workflow.step_5.supp_data5_snp_enst.fasta",
+    # ~ snp_sample_id=patient_id,
     # ~ output_neoantigen_criteria=data_training_dir + "aa_workflow.step_5.output_neoantigen_criteria.csv",
     # ~ output_protein_mutation=data_training_dir + "aa_workflow.step_5.protein_mutation.csv")
 

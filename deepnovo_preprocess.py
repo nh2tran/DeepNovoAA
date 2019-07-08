@@ -353,7 +353,7 @@ def merge_mgf_file(input_file_list, fraction_list, output_file):
     for input_file, fraction in zip(input_file_list, fraction_list):
       print("input_file = ", os.path.join(input_file))
       with open(input_file, mode="r") as input_handle:
-        for line in input_handle.readlines():
+        for line in input_handle:
           if "SCANS=" in line: # a spectrum found
             counter += 1
             scan = re.split('=|\n|\r', line)[1]

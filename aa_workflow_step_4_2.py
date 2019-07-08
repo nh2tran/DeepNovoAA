@@ -122,12 +122,14 @@ def postprocess(psm_file, output_denovo_peptide_file):
   print("output_denovo_peptide_file =", output_denovo_peptide_file)
 
   denovo_peptide_set = set()
+  num_denovo_psm = 0
   with open(psm_file, 'r') as input_handle:
     csv_reader = csv.DictReader(input_handle, delimiter=',')
     for row in csv_reader:
       peptide = drop_mod_peaks(row['Peptide'])
       accession = drop_mod_peaks(row['Accession'])
       if accession == 'DENOVO':
+        num_denovo_psm += 1
         denovo_peptide_set.add(peptide)
 
   with open(output_denovo_peptide_file, 'w') as output_handle:
@@ -136,3 +138,4 @@ def postprocess(psm_file, output_denovo_peptide_file):
 
   num_denovo_peptides = len(denovo_peptide_set)
   print("num_denovo_peptides =", num_denovo_peptides)
+  print("num_denovo_psm =", num_denovo_psm)

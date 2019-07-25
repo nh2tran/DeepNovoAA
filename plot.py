@@ -9,6 +9,7 @@ import matplotlib.pyplot as pyplot
 from matplotlib_venn import venn2
 from matplotlib_venn import venn3
 matplotlib.rcParams.update({'font.size': 11})
+from scipy import stats
 
 
 # ~ # TEMP
@@ -25,45 +26,55 @@ matplotlib.rcParams.update({'font.size': 11})
 # ~ pyplot.savefig("temp.png")
 
 
-def read_netmhcpan_csv(input_file):
+def read_netmhcpan_csv(input_file, num_allele):
 
   best_nM_list = []
   best_rank_list = []
   with open(input_file, 'r') as input_handle:
     csv_reader = csv.DictReader(input_handle, delimiter=',')
     for row in csv_reader:
-      best_nM = min([float(row[x]) for x in ['nM1', 'nM2', 'nM3', 'nM4']])
-      best_rank = min([float(row[x]) for x in ['Rank1', 'Rank2', 'Rank3', 'Rank4']])
+      best_nM = min([float(row['nM' + str(x)]) for x in range(1, num_allele+1)])
+      best_rank = min([float(row['Rank' + str(x)]) for x in range(1, num_allele+1)])
       best_nM_list.append(best_nM)
       best_rank_list.append(best_rank)
   return best_nM_list, best_rank_list
 
 
-def draw_figure2_boxplot():
+def draw_figure2_boxplot_netmhcpan():
 
-  denovo_path = "temp.manuscript/step6.denovo_peptide.NetMHCpan.xls.csv"
-  db_path = "temp.manuscript/step6.db_peptide.NetMHCpan.xls.csv"
-  iedb_path = "temp.manuscript/step6.iedb_peptide.NetMHCpan.xls.csv"
-  denovo_nM_list, denovo_rank_list = read_netmhcpan_csv(denovo_path)
-  db_nM_list, db_rank_list = read_netmhcpan_csv(db_path)
-  iedb_nM_list, iedb_rank_list = read_netmhcpan_csv(iedb_path)
+  num_allele = 4
+  denovo_path = "deepnovo.aa.figure_2g.netmhcpan_denovo.csv"
+  db_path = "deepnovo.aa.figure_2g.netmhcpan_db.csv"
+  iedb_path = "deepnovo.aa.figure_2g.netmhcpan_iedb.csv"
+  denovo_nM_list, denovo_rank_list = read_netmhcpan_csv(denovo_path, num_allele)
+  db_nM_list, db_rank_list = read_netmhcpan_csv(db_path, num_allele)
+  iedb_nM_list, iedb_rank_list = read_netmhcpan_csv(iedb_path, num_allele)
 
-  nM_list = [denovo_nM_list, db_nM_list, iedb_nM_list]
-  print([len(x) for x in nM_list])
-  fig, ax = pyplot.subplots()
-  pyplot.boxplot(nM_list, labels=['De novo', 'Database', 'IEDB'])
-  ax.set_yscale('log')
-  ax.set_ylabel('Binding affinity (nM, log-scale)')
-  ax.spines["top"].set_visible(False)
-  ax.spines["right"].set_visible(False)
-  # 500-nM threshold
-  pyplot.plot([0, 6], [500, 500], color='black', linestyle='--', linewidth=1)
-  pyplot.savefig("figure2.boxplot_nM.png")
+  # ~ colors = ['red', 'dodgerblue', 'lightgrey']
+  # ~ nM_list = [denovo_nM_list, db_nM_list, iedb_nM_list]
+  # ~ print([len(x) for x in nM_list])
+  # ~ fig, ax = pyplot.subplots()
+  # ~ nM_plot = pyplot.boxplot(nM_list, labels=['De novo', 'Database', 'IEDB'], patch_artist=True)
+  # ~ for patch, color in zip(nM_plot['boxes'], colors):
+    # ~ patch.set_facecolor(color)
+  # ~ ax.set_yscale('log')
+  # ~ ax.set_ylabel('Binding affinity (nM, log-scale)')
+  # ~ ax.spines["top"].set_visible(False)
+  # ~ ax.spines["right"].set_visible(False)
+  # ~ # 500-nM threshold
+  # ~ pyplot.plot([0, 6], [500, 500], color='black', linestyle='--', linewidth=1)
+  # ~ pyplot.savefig("figure2.boxplot_nM.png")
 
+  # ~ colors = ['red', 'dodgerblue']
+  colors = ['red', 'dodgerblue', 'lightgrey']
+  # ~ rank_list = [denovo_rank_list, db_rank_list]
   rank_list = [denovo_rank_list, db_rank_list, iedb_rank_list]
   print([len(x) for x in rank_list])
   fig, ax = pyplot.subplots()
-  pyplot.boxplot(rank_list, labels=['De novo', 'Database', 'IEDB'])
+  # ~ rank_plot = pyplot.boxplot(rank_list, labels=['De novo', 'Database'], patch_artist=True)
+  rank_plot = pyplot.boxplot(rank_list, labels=['De novo', 'Database', 'IEDB'], patch_artist=True)
+  for patch, color in zip(rank_plot['boxes'], colors):
+    patch.set_facecolor(color)
   ax.set_yscale('log')
   ax.set_ylabel('Binding affinity rank (%, log-scale)')
   ax.spines["top"].set_visible(False)
@@ -73,7 +84,62 @@ def draw_figure2_boxplot():
   pyplot.plot([0, 6], [0.5, 0.5], color='black', linestyle='--', linewidth=1)
   pyplot.savefig("figure2.boxplot_rank.png")
 
-# ~ draw_figure2_boxplot()
+  print("np.log(np.median(denovo_rank_list)) =", np.log(np.median(denovo_rank_list)))
+  print("np.log(np.median(db_rank_list)) =", np.log(np.median(db_rank_list)))
+  print("np.log(np.median(iedb_rank_list))", np.log(np.median(iedb_rank_list)))
+  mannwhitneyu, pvalue = stats.mannwhitneyu(denovo_rank_list, iedb_rank_list)
+  print("mannwhitneyu =", mannwhitneyu)
+  print("pvalue =", pvalue)
+
+# ~ draw_figure2_boxplot_netmhcpan()
+
+
+def read_immuno_csv(input_file):
+
+  score_list = []
+  with open(input_file, 'r') as input_handle:
+    csv_reader = csv.DictReader(input_handle, delimiter=',')
+    for row in csv_reader:
+      score_list.append(float(row['score']))
+  return score_list
+
+
+def draw_figure2_boxplot_immuno():
+
+  denovo_path = "deepnovo.aa.figure_S5.mel_16.immuno_denovo.csv"
+  db_path = "deepnovo.aa.figure_S5.mel_16.immuno_db.csv"
+  # ~ iedb_path = "deepnovo.aa.figure_2i.immuno_iedb.csv"
+  # ~ model_path = "deepnovo.aa.figure_2i.immuno_model.csv"
+  denovo_score_list = read_immuno_csv(denovo_path)
+  db_score_list = read_immuno_csv(db_path)
+  # ~ iedb_score_list = read_immuno_csv(iedb_path)
+  # ~ model_score_list = read_immuno_csv(model_path)
+
+  # ~ colors = ['red', 'dodgerblue', 'lightgrey', 'white']
+  colors = ['red', 'dodgerblue']
+  # ~ score_list = [denovo_score_list, db_score_list, iedb_score_list, model_score_list]
+  score_list = [denovo_score_list, db_score_list]
+  print([len(x) for x in score_list])
+  fig, ax = pyplot.subplots()
+  # ~ score_plot = pyplot.boxplot(score_list, labels=['De novo', 'Database', 'IEDB', 'Calis et al.'], patch_artist=True)
+  score_plot = pyplot.boxplot(score_list, labels=['De novo', 'Database'], patch_artist=True)
+  for patch, color in zip(score_plot['boxes'], colors):
+    patch.set_facecolor(color)
+  ax.set_ylabel('Immunogenicity')
+  ax.spines["top"].set_visible(False)
+  ax.spines["right"].set_visible(False)
+  pyplot.plot([0, 6], [0., 0.], color='black', linestyle='--', linewidth=1)
+  pyplot.savefig("figure2.boxplot_immuno.png")
+
+  print("np.median(denovo_score_list) =", np.median(denovo_score_list))
+  print("np.median(db_score_list) =", np.median(db_score_list))
+  # ~ print("np.median(iedb_score_list) =", np.median(iedb_score_list))
+  # ~ print("np.median(model_score_list) =", np.median(model_score_list))
+  mannwhitneyu, pvalue = stats.mannwhitneyu(denovo_score_list, db_score_list)
+  print("mannwhitneyu =", mannwhitneyu)
+  print("pvalue =", pvalue)
+
+# ~ draw_figure2_boxplot_immuno()
 
 
 def draw_figure2_venn():

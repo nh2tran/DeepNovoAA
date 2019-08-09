@@ -208,6 +208,30 @@ def read_netmhc(netmhc_file):
   return peptide_netmhc
 
 
+def read_immunogenicity(immunogenicity_file):
+
+  print("read_immunogenicity()")
+  print("immunogenicity_file:", immunogenicity_file)
+
+  # store immunogenicity of denovo peptides in a dictionary 
+  # {peptide: {'immunogenicity': }}
+  peptide_immunogenicity = {}
+  with open(immunogenicity_file, 'r') as input_handle:
+    csv_reader = csv.DictReader(input_handle, delimiter=',')
+    for row in csv_reader:
+      peptide = row['peptide']
+      if peptide not in peptide_immunogenicity:
+        score = float(row['score'])
+        peptide_immunogenicity[peptide] = {'immunogenicity': score}
+      else:
+        print("Warning: duplicate peptide found in peptide_immunogenicity:", peptide)
+
+  print("Number of peptides:", len(peptide_immunogenicity))
+  print()
+
+  return peptide_immunogenicity
+
+
 def read_fasta(fasta_file,
                get_uniprot_id=False,
                get_enst_id=False,
@@ -333,10 +357,10 @@ def find_mutation(peptide_list, protein_list):
       match['mutation_wt'] = mutation_wildtype
       match['mutation_aa'] = mutation_aa
       match['is_missense'] = int((mutation_aa, mutation_wildtype) in AA_PAIR_MISSENSE)
-      not_flanking = int(match['mutation_pos'] != 1 and match['mutation_pos'] != len(peptide))
-      match['is_missense_not_flanking'] = match['is_missense'] * not_flanking
+      notflanking = int(match['mutation_pos'] != 1 and match['mutation_pos'] != len(peptide))
+      match['is_missense_notflanking'] = match['is_missense'] * notflanking
 
-      if match['is_missense_not_flanking']:
+      if match['is_missense_notflanking']:
         protein_mutation_entry = {'peptide': peptide, 'match_index': match['match_index']}
         if not protein['name'] in protein_mutation:
           protein_mutation[protein['name']] = [protein_mutation_entry]
@@ -345,10 +369,10 @@ def find_mutation(peptide_list, protein_list):
 
     num_hits = len(match_list)
     num_missense = len([x for x in match_list if x['is_missense'] == 1])
-    num_missense_not_flanking = len([x for x in match_list if x['is_missense_not_flanking'] == 1])
+    num_missense_notflanking = len([x for x in match_list if x['is_missense_notflanking'] == 1])
     peptide_mutation[peptide] = {'num_hits': num_hits,
                                  'num_missense': num_missense,
-                                 'num_missense_not_flanking': num_missense_not_flanking,
+                                 'num_missense_notflanking': num_missense_notflanking,
                                  'match_list': match_list}
 
   print("Number of denovo peptides with >= 1 hits:",
@@ -356,7 +380,7 @@ def find_mutation(peptide_list, protein_list):
   print("Number of denovo peptides with >= 1 missense hits:",
         len([x for x in peptide_mutation.values() if x['num_missense'] >= 1]))
   print("Number of denovo peptides with >= 1 missense, not flanking hits:",
-        len([x for x in peptide_mutation.values() if x['num_missense_not_flanking'] >= 1]))
+        len([x for x in peptide_mutation.values() if x['num_missense_notflanking'] >= 1]))
   print()
 
   return peptide_mutation, protein_mutation
@@ -459,7 +483,7 @@ def match_peptide_snp(peptide_list, snp_file, snp_enst_fasta, snp_sample_id):
   return peptide_snp
 
 
-def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
+def step_5(psm_file, netmhc_file, immunogenicity_file, db_fasta_file, labeled_feature_file,
            snp_file, snp_enst_fasta, snp_sample_id,
            output_neoantigen_criteria, output_protein_mutation):
 
@@ -471,6 +495,11 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
     denovo_netmhc = read_netmhc(netmhc_file)
   else:
     denovo_netmhc = None
+  denovo_peptide_list = denovo_psm.keys()
+  if immunogenicity_file:
+    denovo_immunogenicity = read_immunogenicity(immunogenicity_file)
+  else:
+    denovo_immunogenicity = None
   denovo_peptide_list = denovo_psm.keys()
 
   print("Find denovo mutations with respect to the reference fasta:")
@@ -493,13 +522,19 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
   print("Find wildtypes in identified db peptides")
   db_peptide_set = read_db_peptide(labeled_feature_file)
   for peptide in denovo_mutation:
-    num_db = 0
+    num_missense_db = 0
+    num_missense_notflanking_db = 0
     for match in denovo_mutation[peptide]['match_list']:
-      match['is_db'] = int(match['wildtype'] in db_peptide_set)
-      num_db += match['is_db']
-    denovo_mutation[peptide]['num_db'] = num_db
-  print("Number of denovo peptides with >= 1 wildtype hits:",
-        len([x for x in denovo_mutation.values() if x['num_db'] >= 1]))
+      match['is_missense_db'] = match['is_missense'] * int(match['wildtype'] in db_peptide_set)
+      match['is_missense_notflanking_db'] = match['is_missense_notflanking'] * int(match['wildtype'] in db_peptide_set)
+      num_missense_db += match['is_missense_db']
+      num_missense_notflanking_db += match['is_missense_notflanking_db']
+    denovo_mutation[peptide]['num_missense_db'] = num_missense_db
+    denovo_mutation[peptide]['num_missense_notflanking_db'] = num_missense_notflanking_db
+  print("Number of denovo peptides with >= 1 missense_db hits:",
+        len([x for x in denovo_mutation.values() if x['num_missense_db'] >= 1]))
+  print("Number of denovo peptides with >= 1 missense_notflanking_db hits:",
+        len([x for x in denovo_mutation.values() if x['num_missense_notflanking_db'] >= 1]))
   print()
 
   if snp_file:
@@ -520,10 +555,12 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
                   'best_rank',
                   'is_weak_binding',
                   'is_strong_binding',
+                  'immunogenicity',
                   'num_hits',
                   'num_missense',
-                  'num_missense_not_flanking',
-                  'num_db',
+                  'num_missense_notflanking',
+                  'num_missense_db',
+                  'num_missense_notflanking_db',
                   'match_list',
                   'snp_list']
     csv_writer = csv.DictWriter(output_handle, fieldnames=fieldnames, delimiter=',')
@@ -533,6 +570,8 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
       row.update(denovo_psm[peptide])
       if denovo_netmhc is not None and peptide in denovo_netmhc:
         row.update(denovo_netmhc[peptide])
+      if denovo_immunogenicity is not None and peptide in denovo_immunogenicity:
+        row.update(denovo_immunogenicity[peptide])
       row.update(denovo_mutation[peptide])
       if denovo_snp is not None:
         row.update(denovo_snp[peptide])
@@ -542,7 +581,7 @@ def step_5(psm_file, netmhc_file, db_fasta_file, labeled_feature_file,
 
   print("Selection criteria: >= 1 missense, not flanking hits AND >= 2 psm")
   num_selection = len([peptide for peptide in denovo_peptide_list
-                       if denovo_mutation[peptide]['num_missense_not_flanking'] >= 1
+                       if denovo_mutation[peptide]['num_missense_notflanking'] >= 1
                        and denovo_psm[peptide]['num_psm'] >= 2])
   print("num_selection :", num_selection)
 

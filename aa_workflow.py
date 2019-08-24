@@ -11,10 +11,10 @@ import aa_workflow_step_5
 
 
 data_fasta_dir = "data.fasta/"
-patient_id = "Mel8"
-data_training_dir = "data.training/aa.hla.bassani.nature_2016.mel_8.class_1/"
-# ~ num_fractions = 16
-# ~ model_dir = "train.mel_15.class_1" # before training, create this empty folder at the same level as Python scripts.
+patient_id = "Mel16"
+data_training_dir = "data.training/aa.hla.bassani.nature_2016.mel_16.class_1/"
+num_fractions = 11
+model_dir = "train.mel_16.class_1" # before training, create this empty folder at the same level as Python scripts.
 
 
 # ================================================================================
@@ -95,7 +95,7 @@ data_training_dir = "data.training/aa.hla.bassani.nature_2016.mel_8.class_1/"
 # Step 1.3: Right-click on the DB search node "??", select "Deep Denovo Export".
 # ================================================================================
 
-# We will get the following 8 pairs of csv and mgf files in the PEAKS project folder:
+# We will get the following 11 pairs of csv and mgf files in the PEAKS project folder:
 
 #       export_0.csv, export_0.mgf
 #       export_1.csv, export_1.mgf
